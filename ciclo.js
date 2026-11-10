@@ -6,9 +6,15 @@
    (dobles espacios, "Calle", abreviaturas) y fija cómo se comercializa:
    por habitaciones o como piso completo. Hipótesis: un piso completo es una sola unidad con un solo ciclo. */
 const floorCatalog = [
-  { name:"Piso Centro", mode:"habitaciones", aliases:["centro","calle centro"] },
-  { name:"Piso Norte", mode:"habitaciones", aliases:["norte","calle norte"] },
-  { name:"Piso Sur", mode:"completo", aliases:["sur","calle sur"] }
+  { name:"Canillas 43", mode:"habitaciones", aliases:["calle canillas 43"] },
+  { name:"Luis Vives 14", mode:"habitaciones", aliases:["calle luis vives 14"] },
+  { name:"Alonso Castrillo 1", mode:"habitaciones", aliases:["calle alonso castrillo 1"] },
+  { name:"Narciso Serra 8", mode:"habitaciones", aliases:["calle narciso serra 8","calle narciso serra 8 1°"] },
+  { name:"Castellana 229", mode:"habitaciones", aliases:["paseo castellana 229","paseo de la castellana 229"] },
+  { name:"Santa Engracia 122", mode:"completo", aliases:["sta engracia 122","calle sta engracia 122"] },
+  { name:"Esparteros 11", mode:"completo", aliases:["calle esparteros 11"] },
+  { name:"Marcenado 1", mode:"completo", aliases:["calle marcenado 1"] },
+  { name:"Espronceda 7", mode:"completo", aliases:["calle espronceda 7"] }
 ];
 const floorKey = value => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").replace(/^(calle|paseo de la|paseo|piso) /,"").trim();
 function catalogFloor(value) {
@@ -22,11 +28,11 @@ const leaverLabel = room => isWholeFloor(room) ? "Titular saliente" : "Residente
 
 const cycleBlocks = { comercializacion:"Comercialización", candidaturas:"Candidaturas y renovación", cierre:"Cierre" };
 const renewalSeed = {
-  "centro-1": { status:"Rechazada", price:730, sentOn:"2026-10-20", respondedOn:"2026-10-24" },
-  "centro-2": { status:"Oferta enviada", price:750, sentOn:"2026-11-06" },
-  "centro-3": { status:"En espera", price:740, sentOn:"2026-10-15", requestedOn:"2026-11-09" },
-  "norte-1": { status:"Sin oferta" },
-  "norte-2": { status:"Oferta enviada", price:710, sentOn:"2026-11-04" }
+  "narciso-1": { status:"Rechazada", price:730, sentOn:"2026-10-20", respondedOn:"2026-10-24" },
+  "narciso-2": { status:"Oferta enviada", price:750, sentOn:"2026-11-06" },
+  "narciso-3": { status:"En espera", price:740, sentOn:"2026-10-15", requestedOn:"2026-11-09" },
+  "canillas-1": { status:"Sin oferta" },
+  "canillas-2": { status:"Oferta enviada", price:710, sentOn:"2026-11-04" }
 };
 const pendingTerm = 7;
 let cycleOrigin = "pipeline";

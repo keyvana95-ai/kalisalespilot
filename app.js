@@ -1,6 +1,6 @@
 "use strict";
 
-const storageKey = "kali-sales-pilot-v2";
+const storageKey = "kali-sales-pilot-v3";
 const demoDay = "2026-11-10";
 const channels = ["Idealista", "Portales asociados", "Grupos de Facebook", "Web de KALI"];
 const listingStatuses = ["Activo", "Pausado", "Retirado"];
@@ -10,12 +10,12 @@ const internalSignatureStage = "Pendiente de firma interna";
 const candidateStages = ["Nuevo", "En conversación", pendingPaymentsStage, "Cerrado sin acuerdo"];
 const closedStage = "Cerrado sin acuerdo";
 const rooms = [
-  { id:"centro-1", number:1, floor:"Piso Centro", exit:"2026-12-12", ready:"2026-12-15", rent:700, target:730, listings:[{ channel:"Idealista", status:"Activo", price:720, publishedOn:"2026-11-01", url:"https://example.com/kali/centro-1-idealista" },{ channel:"Web de KALI", status:"Activo", price:720, publishedOn:"2026-11-01", url:"https://example.com/kali/centro-1-web" }], candidates:[{ id:"demo-a", name:"Candidato A", channel:"Idealista", stage:"En conversación", nextAction:"Compartir las fotos" },{ id:"demo-b", name:"Candidato B", channel:"Web de KALI", stage:"Pendiente de depósito", nextAction:"Comprobar el cobro" }], renewal:"Oferta rechazada · 730 €", resident:"Lucía Ejemplo", entry:"2026-06-12" },
-  { id:"centro-2", number:2, floor:"Piso Centro", exit:"2027-01-03", rent:725, target:760, listings:[{ channel:"Idealista", status:"Activo", price:760, publishedOn:"2026-11-06", url:"https://example.com/kali/centro-2-idealista" }], candidates:[{ id:"demo-c", name:"Candidato C", channel:"Idealista", stage:"En conversación", nextAction:"Confirmar sus fechas" }], renewal:"Oferta enviada · 750 €", resident:"Nora Ejemplo", entry:"2026-09-03" },
-  { id:"centro-3", number:3, floor:"Piso Centro", exit:"2026-12-08", ready:"2026-12-10", rent:715, target:740, listings:[{ channel:"Idealista", status:"Pausado", price:740, publishedOn:"2026-10-25", url:"https://example.com/kali/centro-3-idealista" }], candidates:[], renewal:"Sin solicitud en espera", resident:"Mateo Ejemplo", entry:"2026-06-08" },
-  { id:"norte-1", number:1, floor:"Piso Norte", exit:"2027-01-09", rent:690, listings:[], candidates:[], renewal:"Oferta pendiente de pricing", resident:"Elena Ejemplo", entry:"2026-07-09" },
-  { id:"norte-2", number:2, floor:"Piso Norte", exit:"2026-12-28", ready:"2027-01-02", rent:680, target:710, listings:[{ channel:"Idealista", status:"Activo", price:710, publishedOn:"2026-11-04", url:"https://example.com/kali/norte-2-idealista" },{ channel:"Grupos de Facebook", status:"Activo", price:710, publishedOn:"2026-11-05", url:"https://example.com/kali/norte-2-facebook" }], candidates:[{ id:"demo-d", name:"Candidato D", channel:"Grupos de Facebook", stage:"Nuevo", nextAction:"Enviar las fotos vigentes" }], renewal:"", resident:"Sofía Ejemplo", entry:"2026-06-28" },
-  { id:"sur", unit:"piso", number:null, floor:"Piso Sur", exit:"2026-12-31", ready:"2027-01-03", rent:3100, target:3400, listings:[{ channel:"Idealista", status:"Activo", price:3400, publishedOn:"2026-11-03", url:"https://example.com/kali/piso-sur-idealista" }], candidates:[{ id:"demo-e", name:"Grupo E (3 personas)", channel:"Idealista", stage:"En conversación", nextAction:"Enviar las fotos del piso" }], renewal:"", resident:"Tomás Ejemplo", entry:"2026-01-01" }
+  { id:"narciso-1", number:1, floor:"Narciso Serra 8", exit:"2026-12-12", ready:"2026-12-15", rent:700, target:730, listings:[{ channel:"Idealista", status:"Activo", price:720, publishedOn:"2026-11-01", url:"https://example.com/kali/narciso-1-idealista" },{ channel:"Web de KALI", status:"Activo", price:720, publishedOn:"2026-11-01", url:"https://example.com/kali/narciso-1-web" }], candidates:[{ id:"demo-a", name:"Candidato A", channel:"Idealista", stage:"En conversación", nextAction:"Compartir las fotos" },{ id:"demo-b", name:"Candidato B", channel:"Web de KALI", stage:"Pendiente de depósito", nextAction:"Comprobar el cobro" }], renewal:"Oferta rechazada · 730 €", resident:"Lucía Ejemplo", entry:"2026-06-12" },
+  { id:"narciso-2", number:2, floor:"Narciso Serra 8", exit:"2027-01-03", rent:725, target:760, listings:[{ channel:"Idealista", status:"Activo", price:760, publishedOn:"2026-11-06", url:"https://example.com/kali/narciso-2-idealista" }], candidates:[{ id:"demo-c", name:"Candidato C", channel:"Idealista", stage:"En conversación", nextAction:"Confirmar sus fechas" }], renewal:"Oferta enviada · 750 €", resident:"Nora Ejemplo", entry:"2026-09-03" },
+  { id:"narciso-3", number:3, floor:"Narciso Serra 8", exit:"2026-12-08", ready:"2026-12-10", rent:715, target:740, listings:[{ channel:"Idealista", status:"Pausado", price:740, publishedOn:"2026-10-25", url:"https://example.com/kali/narciso-3-idealista" }], candidates:[], renewal:"Sin solicitud en espera", resident:"Mateo Ejemplo", entry:"2026-06-08" },
+  { id:"canillas-1", number:1, floor:"Canillas 43", exit:"2027-01-09", rent:690, listings:[], candidates:[], renewal:"Oferta pendiente de pricing", resident:"Elena Ejemplo", entry:"2026-07-09" },
+  { id:"canillas-2", number:2, floor:"Canillas 43", exit:"2026-12-28", ready:"2027-01-02", rent:680, target:710, listings:[{ channel:"Idealista", status:"Activo", price:710, publishedOn:"2026-11-04", url:"https://example.com/kali/canillas-2-idealista" },{ channel:"Grupos de Facebook", status:"Activo", price:710, publishedOn:"2026-11-05", url:"https://example.com/kali/canillas-2-facebook" }], candidates:[{ id:"demo-d", name:"Candidato D", channel:"Grupos de Facebook", stage:"Nuevo", nextAction:"Enviar las fotos vigentes" }], renewal:"", resident:"Sofía Ejemplo", entry:"2026-06-28" },
+  { id:"santa-engracia", unit:"piso", number:null, floor:"Santa Engracia 122", exit:"2026-12-31", ready:"2027-01-03", rent:3100, target:3400, listings:[{ channel:"Idealista", status:"Activo", price:3400, publishedOn:"2026-11-03", url:"https://example.com/kali/santa-engracia-idealista" }], candidates:[{ id:"demo-e", name:"Grupo E (3 personas)", channel:"Idealista", stage:"En conversación", nextAction:"Enviar las fotos del piso" }], renewal:"", resident:"Tomás Ejemplo", entry:"2026-01-01" }
 ];
 const people = {
   "Lucía Ejemplo": ["P-001","lucia@example.com","España","27","Mujer","Diseño","Estudio de ejemplo","Híbrido"],
@@ -29,8 +29,8 @@ const people = {
   "Tomás Ejemplo": ["P-009","tomas@example.com","Alemania","34","Hombre","Ingeniería","Empresa de ejemplo","Presencial"]
 };
 const previousStays = [
-  { name:"Lucía Ejemplo", floor:"Piso Norte", number:2, entry:"2026-01-12", exit:"2026-06-12", rent:660, deposit:650, reference:"DEMO-C07" },
-  { name:"Clara Ejemplo", floor:"Piso Norte", number:3, entry:"2026-05-01", exit:"2026-10-01", rent:680, deposit:680, reference:"DEMO-C09" }
+  { name:"Lucía Ejemplo", floor:"Canillas 43", number:2, entry:"2026-01-12", exit:"2026-06-12", rent:660, deposit:650, reference:"DEMO-C07" },
+  { name:"Clara Ejemplo", floor:"Canillas 43", number:3, entry:"2026-05-01", exit:"2026-10-01", rent:680, deposit:680, reference:"DEMO-C09" }
 ];
 const money = new Intl.NumberFormat("es-ES", { style:"currency", currency:"EUR", minimumFractionDigits:0, maximumFractionDigits:2 });
 const shortDate = new Intl.DateTimeFormat("es-ES", { day:"numeric", month:"short", timeZone:"UTC" });
@@ -48,12 +48,12 @@ let state = load();
 
 function seed() {
   return {
-    "centro-1": { opened:true, measure:"", next:null },
-    "centro-2": { opened:true, measure:"", next:null },
-    "centro-3": { opened:true, measure:"", next:{ name:"Daniel Ejemplo", rent:740, deposit:740, entryFee:100, paid:"2026-11-08", entry:"2026-12-10", exit:"2027-06-10", signed:null, reference:null } },
-    "norte-1": { opened:false, measure:"", next:null },
-    "norte-2": { opened:true, measure:"", next:null },
-    "sur": { opened:true, measure:"", next:null }
+    "narciso-1": { opened:true, measure:"", next:null },
+    "narciso-2": { opened:true, measure:"", next:null },
+    "narciso-3": { opened:true, measure:"", next:{ name:"Daniel Ejemplo", rent:740, deposit:740, entryFee:100, paid:"2026-11-08", entry:"2026-12-10", exit:"2027-06-10", signed:null, reference:null } },
+    "canillas-1": { opened:false, measure:"", next:null },
+    "canillas-2": { opened:true, measure:"", next:null },
+    "santa-engracia": { opened:true, measure:"", next:null }
   };
 }
 

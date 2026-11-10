@@ -340,3 +340,7 @@ a.whole-floor .floor-head::after { content:none; }
   .piso-metrics { grid-template-columns:1fr 1fr; }
 }
 @media(max-width:900px) { .dt-row > :first-child[data-label]::before,.zone-row > :first-child[data-label]::before { display:none; } }
+.real-chip,.example-chip { display:inline-block; font-size:12px; font-weight:650; padding:3px 9px; border-radius:5px; }
+.real-chip { background:color-mix(in srgb,#5e7a5a 16%,var(--cream)); color:var(--green); }
+.example-chip { background:var(--soft); color:var(--muted); }
+#main:focus { outline:none; }
