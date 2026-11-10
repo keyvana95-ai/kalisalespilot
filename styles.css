@@ -272,3 +272,71 @@ a.whole-floor .go { color:var(--brick-deep); font-weight:700; }
 a.whole-floor:hover .floor-head { background:var(--soft); }
 a.whole-floor:focus-visible { outline-offset:2px; }
 a.whole-floor .floor-head::after { content:none; }
+
+/* Sección Pisos (vista previa) */
+.proposal-tag { margin:-8px 0 14px; }
+.zone-panel .panel-head { align-items:flex-start; }
+.zone-panel .panel-head small { display:block; margin-top:3px; max-width:640px; }
+.sort-toggle { display:flex; gap:6px; flex-wrap:wrap; }
+.sort-toggle button { min-height:36px; padding:6px 12px; font-size:12px; }
+.zone-table { border-top:1px solid var(--line); }
+.zone-row { display:grid; grid-template-columns:minmax(0,1.6fr) repeat(4,minmax(0,1fr)); gap:10px 14px; align-items:center; padding:10px 16px; border-top:1px solid var(--line); font-size:14px; }
+.zone-row:first-child { border-top:0; }
+.zone-head { background:var(--ground); color:var(--muted); font-size:12px; font-weight:650; }
+.zone-row small { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+.zone-bar { display:block; height:5px; margin-top:7px; border-radius:3px; background:var(--soft); overflow:hidden; max-width:220px; }
+.zone-bar span { display:block; height:100%; background:var(--brick); border-radius:3px; }
+.zone-note { padding:10px 16px 14px; font-size:12px; border-top:1px solid var(--line); }
+.cases { display:inline-block; font-size:11px; font-weight:650; padding:0 6px; border-radius:4px; background:var(--soft); color:var(--muted); white-space:nowrap; vertical-align:1px; }
+.cases.few { background:color-mix(in srgb,var(--earth) 22%,var(--cream)); color:var(--amber); }
+.pending-re { display:inline-block; font-size:12px; font-weight:650; color:var(--amber); background:color-mix(in srgb,var(--earth) 15%,var(--cream)); padding:1px 7px; border-radius:4px; }
+.pisos-toolbar { display:flex; flex-wrap:wrap; gap:12px; }
+.pisos-toolbar label { flex:1 1 180px; max-width:240px; }
+.pisos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; }
+.piso-card { display:grid; gap:9px; align-content:start; padding:16px; color:inherit; text-decoration:none; transition:box-shadow .15s,background .15s; }
+.piso-card:hover { background:var(--soft); box-shadow:0 4px 14px -8px rgb(39 39 39 / .35); }
+.piso-card-head h2 { font:500 23px/1.15 Georgia,serif; }
+.piso-card-head span { display:block; font-size:13px; margin-top:2px; }
+.piso-facts { font-weight:600; }
+.piso-transport { font-size:13px; color:var(--muted); }
+.piso-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; padding-top:10px; border-top:1px solid var(--line); }
+.piso-metrics dt { font-size:11px; color:var(--muted); }
+.piso-metrics dd { margin:2px 0 0; font-weight:650; font-size:14px; }
+.vs-market { font-size:13px; font-weight:600; color:var(--muted); }
+.vs-market.below { color:var(--brick-deep); } .vs-market.above { color:var(--green); }
+.piso-card .go { color:var(--brick-deep); font-weight:650; font-size:13px; }
+.readonly-chip { display:inline-block; font-size:12px; font-weight:650; padding:3px 9px; border-radius:5px; border:1px dashed color-mix(in srgb,var(--ink) 35%,transparent); color:var(--muted); }
+.piso-fields .fields { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.transport-list { list-style:none; margin:6px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:8px 18px; }
+.transport-list small { color:var(--muted); margin-left:4px; }
+.transport-type { display:inline-block; font-size:11px; font-weight:700; padding:1px 6px; border-radius:4px; background:var(--ink); color:var(--cream); }
+.data-table { border-top:1px solid var(--line); }
+.dt-row { display:grid; gap:10px 14px; align-items:center; padding:10px 16px; border-top:1px solid var(--line); font-size:14px; }
+.dt-row:first-child { border-top:0; }
+.dt-head { background:var(--ground); color:var(--muted); font-size:12px; font-weight:650; }
+.dt-row small { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+.bath-table .dt-row { grid-template-columns:120px 100px minmax(0,1fr); }
+.room-table .dt-row { grid-template-columns:minmax(0,1.1fr) 60px 90px minmax(0,1.4fr) minmax(0,1.8fr) minmax(0,1fr) 90px minmax(0,1.3fr); }
+.compare-table .dt-row { grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.6fr); }
+.compare-table { margin-top:8px; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+.window { display:inline-block; font-size:12px; font-weight:650; padding:1px 7px; border-radius:4px; }
+.window.ext { background:color-mix(in srgb,#5e7a5a 16%,var(--cream)); color:var(--green); }
+.window.int { background:var(--soft); color:var(--ink); }
+.market-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+.market-card { display:grid; gap:4px; padding:12px 14px; border:1px solid var(--line); border-radius:9px; background:var(--ground); }
+.market-card small { color:var(--muted); font-size:12px; }
+.market-card strong { font:500 24px/1.15 Georgia,serif; }
+.market-card span { font-size:12px; }
+.diff { font-weight:650; }
+.diff.below { color:var(--brick-deep); } .diff.above { color:var(--green); }
+.unit-features { color:var(--ink); font-weight:600; }
+.features-line { margin-top:6px; }
+@media(max-width:900px) {
+  .zone-row:not(.zone-head),.dt-row:not(.dt-head) { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  .zone-row:not(.zone-head) > :first-child,.dt-row:not(.dt-head) > :first-child { grid-column:1 / -1; }
+  .zone-head,.dt-head { display:none !important; }
+  [data-label]::before { content:attr(data-label); display:block; font-size:11px; color:var(--muted); font-weight:650; }
+  .piso-fields .fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .piso-metrics { grid-template-columns:1fr 1fr; }
+}
+@media(max-width:900px) { .dt-row > :first-child[data-label]::before,.zone-row > :first-child[data-label]::before { display:none; } }

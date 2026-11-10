@@ -258,6 +258,7 @@ function cycleView() {
         <span>Fin contractual ${date(exit,true)}</span>
         ${plannedExit && plannedExit !== exit ? `<span>Check-out previsto ${date(plannedExit,true)}</span>` : ""}
         <span>${room.ready ? "Disponible para check-in desde " + date(room.ready,true) : "Disponibilidad para check-in por confirmar"} <small>(dato de Community)</small></span></p>
+      <p class="facts features-line">${unitFeatures(room)}</p>
       <div class="chips"><span class="stage-chip">Etapa · ${cycleStage(room)}</span><span class="risk ${color}">${riskLabel}</span><small>${dayDiff(demoDay,exit)} días hasta el check-out</small></div>
     </header>
     <section class="next-step ${step ? "" : "done"}" aria-label="Siguiente paso">
@@ -305,7 +306,7 @@ function pipelineRoomRow(room) {
   const step = primaryStep(room);
   const activeCandidates = candidatesFor(room).filter(item => item.stage !== closedStage && item.id !== cycle.next?.candidateId).length;
   return `<a class="row case-row" href="${cycleLink(room)}" data-origin="pipeline">
-    <div><strong>${unitLabel(room.number)}</strong><small>${safe(room.resident)} sale</small></div>
+    <div><strong>${unitLabel(room.number)}</strong><small>${unitFeatures(room,false)}</small><small>${safe(room.resident)} sale</small></div>
     <div><strong>Check-out: ${date(contractualExit(room))}</strong><small>${room.ready ? "Disponible para check-in desde " + date(room.ready) : "Disponibilidad por confirmar"}</small></div>
     <div><strong>${cycleStage(room)}</strong><small>${cycle.opened ? activeCandidates + (activeCandidates === 1 ? " candidatura activa" : " candidaturas activas") : "Ciclo sin abrir"}</small></div>
     <div><span class="risk ${color}">${label}</span><small>${dayDiff(demoDay,contractualExit(room))} días</small></div>
@@ -349,7 +350,7 @@ function pipelineView() {
       const isOpen = openFloors.get(floor.name) ?? urgent;
       return `<details class="panel floor-group pipeline" data-floor="${safe(floor.name)}" ${isOpen ? "open" : ""}>
         <summary class="floor-head">
-          <div class="floor-name"><h2>${safe(floor.name)}</h2><small>${list.length} ${list.length === 1 ? "habitación" : "habitaciones"} · próximo check-out ${date(firstExit)}</small></div>
+          <div class="floor-name"><h2>${safe(floor.name)}</h2><small>${list.length} ${list.length === 1 ? "habitación" : "habitaciones"} en seguimiento · próximo check-out ${date(firstExit)}${realEstateRecords[floor.name] ? ` · <a class="text-button inline" href="#pisos/${realEstateRecords[floor.name].slug}">Ficha del piso</a>` : ""}</small></div>
           <div class="floor-badges">${badge(counts.red,"red","en riesgo de vacío")}${badge(counts.amber,"amber","en seguimiento")}${badge(counts.green,"green","sin riesgo")}</div>
           <div class="floor-todo">${todo(toDo)}</div>
         </summary>
