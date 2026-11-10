@@ -236,17 +236,30 @@ function pisosListView() {
       const roomAvg = record.mode === "completo" ? null : avg(roomsList.map(room => room.perM2));
       const nearest = record.transport ? [...record.transport].sort((a,b) => a.minutes - b.minutes)[0] : null;
       const vsMarket = roomAvg && zone?.compMedianM2 ? (roomAvg / zone.compMedianM2 - 1) * 100 : null;
+      const roomNumbers = Object.keys(record.rooms).map(Number);
+      const marketBar = vsMarket == null ? "" : `<div class="vs-bar ${vsMarket < -5 ? "below" : vsMarket > 5 ? "above" : ""}">
+          <div class="vs-bar-head"><span>€/m² habitación frente al mercado</span><b>${vsMarket > 0 ? "+" : ""}${perM2.format(vsMarket)} %</b></div>
+          <div class="vs-track" aria-hidden="true"><span class="vs-mid"></span><span class="vs-fill" style="${vsMarket >= 0 ? `left:50%;width:${Math.min(50,Math.abs(vsMarket) * 2)}%` : `right:50%;width:${Math.min(50,Math.abs(vsMarket) * 2)}%`}"></span></div>
+        </div>`;
       return `<a class="panel piso-card" href="#pisos/${record.slug}">
-        <div class="piso-card-head"><h2>${safe(name)}</h2>${record.barrio ? `<span class="muted">${safe(zoneName(record))}</span>` : pendingZone}</div>
-        <p class="piso-facts">${record.m2 ? record.m2 + " m²" : "m² pendientes"} · ${roomsList.length} habitaciones · ${record.bathrooms.length} baños · ${safe(record.orientation.toLowerCase())}${record.mode === "completo" ? " · piso completo" : ""}</p>
-        <p class="piso-transport">${nearest ? `${safe(nearest.type)} ${safe(nearest.stop)} (${safe(nearest.lines)}) · ${nearest.minutes} min a pie` : "Transporte pendiente de Real Estate"}</p>
-        <dl class="piso-metrics">
-          <div><dt>€/m² piso</dt><dd>${eurM2(pisoPerM2(name))}</dd></div>
-          <div><dt>€/m² habitación (media)</dt><dd>${roomAvg ? eurM2(roomAvg) : "No aplica"}</dd></div>
-          <div><dt>Mercado de la zona</dt><dd>${zone?.comps.length ? eurM2(zone.compMedianM2) + " " + casesTag(zone.comps.length) : "Sin comparables"}</dd></div>
-        </dl>
-        ${vsMarket == null ? "" : `<p class="vs-market ${vsMarket < -5 ? "below" : vsMarket > 5 ? "above" : ""}">${vsMarket < -5 ? "Por debajo del" : vsMarket > 5 ? "Por encima del" : "En línea con el"} mercado de la zona (${vsMarket > 0 ? "+" : ""}${perM2.format(vsMarket)} % en €/m² de habitación)</p>`}
-        <span class="go" aria-hidden="true">Abrir ficha →</span>
+        <div class="piso-cover ${record.mode}">
+          <span class="cover-mode">${record.mode === "completo" ? "Piso completo" : "Por habitaciones"}</span>
+          <span class="cover-rooms" aria-label="${roomNumbers.length} habitaciones">${roomNumbers.map(number => `<i>${number}</i>`).join("")}</span>
+        </div>
+        <div class="piso-card-body">
+          <div class="piso-card-head"><h2>${safe(name)}</h2>${record.barrio ? `<span class="muted">${safe(zoneName(record))}</span>` : pendingZone}</div>
+          <ul class="piso-chips">
+            <li>${record.m2 ? record.m2 + " m²" : "m² pendientes"}</li><li>${roomsList.length} hab.</li><li>${record.bathrooms.length} baños</li><li>${safe(record.orientation)}</li>
+          </ul>
+          <dl class="piso-metrics">
+            <div><dt>€/m² piso</dt><dd>${pisoPerM2(name) ? eurM2(pisoPerM2(name)).replace(" €/m²","") + "<small>€/m²</small>" : '<span class="na">m² pendientes</span>'}</dd></div>
+            <div><dt>€/m² hab. (media)</dt><dd>${roomAvg ? eurM2(roomAvg).replace(" €/m²","") + "<small>€/m²</small>" : '<span class="na">No aplica</span>'}</dd></div>
+            <div><dt>Mercado zona</dt><dd>${zone?.comps.length ? eurM2(zone.compMedianM2).replace(" €/m²","") + "<small>€/m²</small>" : '<span class="na">Sin datos</span>'}</dd></div>
+          </dl>
+          ${marketBar}
+          <p class="piso-transport">${nearest ? `${safe(nearest.type)} ${safe(nearest.stop)} (${safe(nearest.lines)}) · ${nearest.minutes} min a pie` : "Transporte pendiente de Real Estate"}</p>
+          <span class="go">Abrir ficha ${ico("right")}</span>
+        </div>
       </a>`;
     }).join("") || '<p class="empty">No hay pisos con esos filtros.</p>'}</div></div>`;
 }
@@ -262,13 +275,19 @@ function pisoDetailView(slug) {
   const cycleOf = room => room.unit ? `<a class="text-button inline" href="#ciclo/${room.unit.id}" data-origin="pipeline">${safe(cycleStage(room.unit))}</a>` : `<span class="muted">${safe(room.status ?? "Sin ciclo")}</span>`;
   const extras = room => [room.balcony && "Balcón", room.ac && "Aire", room.desk && "Escritorio", "Armario " + room.wardrobe.toLowerCase()].filter(Boolean).join(" · ");
   const wholeUnit = whole ? rooms.find(room => catalogFloor(room.floor).name === name) : null;
-  return `<p class="crumb"><a href="#pisos">← Pisos</a></p>
+  return `<p class="crumb"><a href="#pisos">${ico("left")}Pisos</a></p>
     <header class="page-head cycle-head">
       <p class="eyebrow">FICHA DEL PISO · REGISTRADO POR REAL ESTATE EL ${date(record.registeredOn,true).toUpperCase()}</p>
       <h1>${safe(name)}</h1>
       <p class="facts"><span>${safe(record.address)}</span><span>${record.barrio ? `<strong>${safe(zoneName(record))}</strong>` : pendingZone}</span><span>${whole ? "Piso completo" : "Por habitaciones"}</span><span>Puntaje de la dirección ${record.score ? record.score + "/5" : "pendiente"}</span></p>
       <div class="chips"><span class="readonly-chip">Solo lectura · lo mantiene Real Estate</span>${record.real.length ? `<span class="real-chip">Constan en Real Estate: ${record.real.map(key => realFieldNames[key]).join(", ")}</span>` : ""}<span class="example-chip">${record.real.length ? "El resto son datos de ejemplo" : "Datos de ejemplo · aún no registrados por Real Estate"}</span>${whole && wholeUnit ? `<a class="text-button inline" href="#ciclo/${wholeUnit.id}" data-origin="pipeline">Ver ciclo comercial del piso</a>` : ""}</div>
     </header>
+    <section class="kpi-strip piso-kpis" aria-label="Datos clave">
+      <div class="kpi"><i class="kpi-ico">${ico("pisos")}</i><strong>${record.m2 ?? "—"}</strong><span>m² totales</span><small>${record.livingM2 ? "Salón de " + record.livingM2 + " m²" : "Salón pendiente"}</small></div>
+      <div class="kpi"><i class="kpi-ico">${ico("users")}</i><strong>${roomsList.length}</strong><span>Habitaciones</span><small>${roomsList.filter(room => room.window === "Exterior").length} con ventana exterior</small></div>
+      <div class="kpi"><i class="kpi-ico">${ico("check")}</i><strong>${record.bathrooms.length}</strong><span>Baños</span><small>${record.bathrooms.filter(item => item.suite).length} en suite</small></div>
+      <div class="kpi"><i class="kpi-ico">${ico("pricing")}</i><strong>${pisoPerM2(name) ? perM2.format(pisoPerM2(name)) : "—"}</strong><span>€/m² del piso</span><small>${record.m2 ? money.format(pisoRent(name)) + " / mes firmados" : "m² pendientes de Real Estate"}</small></div>
+    </section>
     <div class="stack">
       <section class="panel"><div class="panel-head"><h2>El piso</h2></div><div class="block-body">
         <div class="piso-fields">${fields([["m² totales",record.m2 ? record.m2 + " m²" : null],["m² del salón",record.livingM2 ? record.livingM2 + " m²" : null],["Exterior / interior",record.orientation],["Planta",record.floorLevel],["Ascensor",yes(record.lift)],["Terraza o balcón",record.outdoor ?? "No"],["Climatización",record.climate],["Electrodomésticos",record.appliances.join(", ")],["Última reforma",record.renovated],["Gastos",record.utilities],["Baños",record.bathrooms.length + " (" + record.bathrooms.filter(item => item.suite).length + " en suite)"],["Habitaciones",roomsList.length]]).replace(/<dd>Sin registrar<\/dd>/g,`<dd>${pending}</dd>`)}</div>
@@ -312,7 +331,7 @@ function pisoDetailView(slug) {
               <span role="cell" data-label="Habitación"><strong>Habitación ${room.number}</strong><small>${room.m2} m² · ${room.window.toLowerCase()} · ${room.bath.type.toLowerCase()}</small></span>
               <span role="cell" data-label="Renta firmada">${money.format(room.rent)}</span>
               <span role="cell" data-label="Mediana de parecidas">${ref ? money.format(ref) + " " + casesTag(similar.length) : '<span class="muted">Sin comparables parecidos</span>'}</span>
-              <span role="cell" data-label="Diferencia">${diff == null ? "—" : `<span class="diff ${diff < -20 ? "below" : diff > 20 ? "above" : ""}">${diff > 0 ? "+" : ""}${money.format(diff)}${diff < -20 ? " · margen para subir" : diff > 20 ? " · por encima del mercado" : " · en línea"}</span>`}</span>
+              <span role="cell" data-label="Diferencia">${diff == null ? "—" : `<span class="diff ${diff < -20 ? "below" : diff > 20 ? "above" : ""}">${diff < -20 ? ico("trend") : ""}${diff > 0 ? "+" : ""}${money.format(diff)}${diff < -20 ? " · margen para subir" : diff > 20 ? " · por encima del mercado" : " · en línea"}</span>`}</span>
             </div>`;
           }).join("")}
         </div>`}

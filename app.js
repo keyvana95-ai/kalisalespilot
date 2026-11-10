@@ -207,6 +207,7 @@ const nextDisplayName = room => {
   return registry().people[nextPersonKey(next,room)]?.name ?? next.name;
 };
 const directoryToken = value => value.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const initials = name => String(name).split(/\s+/).filter(Boolean).slice(0,2).map(word => word[0].toUpperCase()).join("");
 const stayBadge = status => `<span class="stay-status ${({ Actual:"current", "Próxima":"next", Anterior:"past" })[status] ?? "past"}">${status}</span>`;
 
 function directoryProfiles() {
@@ -292,7 +293,7 @@ function agendaView() {
 function directoryView() {
   return heading("Base Datos Co-livers","Busca un residente y consulta sus estancias y contratos desde una sola ficha.") + `
     <div class="directory-controls"><div class="directory-toolbar">
-      <label>Buscar residente<input type="search" id="resident-search" placeholder="Nombre, piso o habitación" value="${safe(directoryFilter.query)}"></label>
+      <label class="search-field">Buscar residente<span class="search-wrap">${ico("users")}<input type="search" id="resident-search" placeholder="Nombre, piso o habitación" value="${safe(directoryFilter.query)}"></span></label>
       <label>Mostrar<select id="resident-scope">
         <option value="current" ${directoryFilter.scope === "current" ? "selected" : ""}>Actuales y próximos</option>
         <option value="old" ${directoryFilter.scope === "old" ? "selected" : ""}>Anteriores</option>
@@ -319,8 +320,8 @@ function renderDirectoryRows() {
   document.querySelector("#resident-rows").innerHTML = visible.length ? visible.map(person => {
     const stay = person.stays[0];
     return `<tr>
-      <td><button class="text-button resident-name" type="button" data-resident="${safe(person.key)}" aria-haspopup="dialog">${safe(person.name)}</button>${stay ? `<small class="directory-mobile">${safe(stay.floor)} · Hab. ${stay.number}</small>` : ""}</td>
-      <td class="directory-desktop">${safe(stay?.floor ?? "—")}</td><td class="directory-desktop">${stay?.number ?? "—"}</td><td>${stayBadge(stay?.status ?? "Sin estancia")}</td>
+      <td><button class="resident-name" type="button" data-resident="${safe(person.key)}" aria-haspopup="dialog"><span class="avatar" aria-hidden="true">${safe(initials(person.name))}</span><span><strong>${safe(person.name)}</strong>${stay ? `<small class="directory-mobile">${safe(stay.floor)} · Hab. ${stay.number}</small>` : ""}</span></button></td>
+      <td class="directory-desktop">${safe(stay?.floor ?? "—")}</td><td class="directory-desktop">${stay?.number ? `<span class="room-num">${stay.number}</span>` : "—"}</td><td>${stayBadge(stay?.status ?? "Sin estancia")}</td>
     </tr>`;
   }).join("") : '<tr><td colspan="4">No hay residentes que coincidan.</td></tr>';
 }

@@ -619,3 +619,72 @@ button { border-radius:var(--r-sm); }
 .demo { white-space:nowrap; }
 @media(max-width:1240px) { .masthead nav a .ico { display:none; } .demo { display:none; } }
 @media(max-width:880px) { .masthead nav { flex-wrap:wrap; } .masthead nav a .ico { display:inline; } }
+
+/* ===== Diseño v2 · Pisos y Base Datos Co-livers ===== */
+/* Formularios */
+input,textarea,select { border:1px solid rgb(39 39 39 / .2); border-radius:10px; background:var(--surface); box-shadow:inset 0 1px 2px rgb(39 39 39 / .04); transition:border-color .15s,box-shadow .15s; }
+input:focus,textarea:focus,select:focus { outline:none; border-color:var(--brick); box-shadow:0 0 0 3px color-mix(in srgb,var(--brick) 16%,transparent); }
+label { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:700; }
+label input,label select,label textarea { text-transform:none; letter-spacing:0; font-size:15px; font-weight:500; color:var(--ink); }
+dialog label { text-transform:none; letter-spacing:0; font-size:14px; color:var(--ink); font-weight:650; }
+.search-wrap { position:relative; display:block; }
+.search-wrap .ico { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:17px; height:17px; color:var(--muted); }
+.search-wrap input { padding-left:38px; }
+/* Pisos · tarjetas */
+.pisos-grid { gap:16px; }
+.piso-card { padding:0; gap:0; overflow:hidden; border-radius:var(--r-md); box-shadow:var(--shadow); transition:transform .15s,box-shadow .15s; }
+.piso-card:hover { background:var(--surface); transform:translateY(-3px); box-shadow:0 10px 26px rgb(101 21 20 / .12); }
+.piso-cover { position:relative; height:86px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between; color:var(--cream);
+  background:radial-gradient(120% 140% at 100% 0%,rgb(255 242 226 / .16) 0 18%,transparent 18.5% 26%,rgb(255 242 226 / .1) 26.5% 34%,transparent 34.5%),linear-gradient(135deg,var(--brick),var(--brick-deep)); }
+.piso-cover.completo { background:radial-gradient(120% 140% at 100% 0%,rgb(255 242 226 / .16) 0 18%,transparent 18.5% 26%,rgb(255 242 226 / .1) 26.5% 34%,transparent 34.5%),linear-gradient(135deg,#7a4a36,#4e2c20); }
+.cover-mode { align-self:flex-start; font-size:11px; font-weight:750; letter-spacing:.07em; text-transform:uppercase; padding:3px 9px; border-radius:999px; background:rgb(255 242 226 / .16); }
+.cover-rooms { display:flex; gap:4px; }
+.cover-rooms i { display:grid; place-items:center; width:20px; height:20px; border-radius:5px; border:1px solid rgb(255 242 226 / .55); font:700 10.5px/1 var(--display); font-style:normal; }
+.piso-card-body { display:grid; gap:12px; padding:14px 16px 16px; }
+.piso-card-head h2 { font:750 20px/1.2 var(--display); }
+.piso-chips { display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:0; list-style:none; }
+.piso-chips li { font-size:12.5px; font-weight:650; padding:3px 9px; border-radius:999px; background:var(--soft); }
+.piso-metrics { padding-top:12px; gap:10px; }
+.piso-metrics dt { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+.piso-metrics dd { font:600 22px/1.1 var(--num); margin-top:4px; font-variant-numeric:tabular-nums; }
+.piso-metrics dd small { font:600 11px var(--display); color:var(--muted); margin-left:3px; }
+.piso-metrics .na { font:600 13px var(--display); color:var(--muted); }
+.vs-bar { display:grid; gap:6px; }
+.vs-bar-head { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); font-weight:600; }
+.vs-bar-head b { color:var(--ink); }
+.vs-bar.above .vs-bar-head b { color:var(--green); } .vs-bar.below .vs-bar-head b { color:var(--red); }
+.vs-track { position:relative; height:6px; border-radius:6px; background:var(--soft); }
+.vs-mid { position:absolute; left:50%; top:-3px; bottom:-3px; width:2px; background:var(--muted); opacity:.5; }
+.vs-fill { position:absolute; top:0; bottom:0; border-radius:6px; background:var(--muted); }
+.vs-bar.above .vs-fill { background:var(--green-bar); } .vs-bar.below .vs-fill { background:var(--red-bar); }
+.piso-transport { font-size:12.5px; color:var(--muted); }
+.piso-card .go { display:inline-flex; align-items:center; gap:6px; font-size:13.5px; color:var(--brick); }
+.piso-card:hover .go .ico { transform:translateX(3px); } .go .ico { transition:transform .15s; }
+/* Pisos · ficha */
+.piso-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.data-table .dt-head { text-transform:uppercase; font-size:11px; letter-spacing:.06em; }
+.diff { display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:999px; font-weight:700; }
+.diff.above { background:var(--green-bg); color:var(--green); } .diff.below { background:var(--red-bg); color:var(--red); }
+.window { border-radius:999px; }
+/* Base Datos Co-livers */
+.directory-list th { text-transform:uppercase; font-size:11px; letter-spacing:.06em; font-weight:700; padding-block:11px; }
+.directory-list td { padding-block:11px; vertical-align:middle; }
+.directory-list tbody tr { transition:background .15s; }
+.directory-list tbody tr:hover { background:color-mix(in srgb,var(--salmon) 7%,var(--surface)); }
+button.resident-name { display:inline-flex; align-items:center; gap:12px; min-height:0; padding:0; background:none; color:var(--ink); text-align:left; font-weight:inherit; }
+button.resident-name:hover { background:none; }
+button.resident-name:hover strong { color:var(--brick); text-decoration:underline; text-underline-offset:3px; }
+.resident-name strong { display:block; font-size:15px; font-weight:700; }
+.avatar { display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:50%; font:750 13px/1 var(--display); color:var(--brick-deep); background:color-mix(in srgb,var(--salmon) 34%,var(--cream)); border:1px solid color-mix(in srgb,var(--brick) 18%,transparent); }
+.room-num { display:inline-grid; place-items:center; min-width:28px; height:28px; padding:0 6px; border-radius:7px; background:var(--soft); font-weight:750; font-size:13px; }
+.stay-status { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; font-size:12.5px; font-weight:700; }
+.stay-status::before { content:""; width:7px; height:7px; border-radius:50%; background:currentColor; }
+.stay-status.current { background:var(--green-bg); color:var(--green); }
+.stay-status.next { background:var(--amber-bg); color:var(--amber); }
+.stay-status.past { background:var(--soft); color:var(--muted); }
+/* Ficha del residente */
+dialog { border-radius:16px; }
+.dialog-head { background:var(--surface); }
+@media(max-width:900px) { .piso-kpis { grid-template-columns:1fr 1fr; } }
+.zone-head { background:var(--soft); text-transform:uppercase; font-size:11px; letter-spacing:.06em; font-weight:700; }
+.zone-row:not(.zone-head) { font-variant-numeric:tabular-nums; }
