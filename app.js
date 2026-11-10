@@ -86,7 +86,7 @@ const view = () => ["", "#", "#inicio"].includes(location.hash) ? "inicio" : loc
 const action = (room, type, label, style = "secondary") => `<button type="button" class="${style}" data-action="${type}" data-room="${room.id}">${label}</button>`;
 const fields = entries => `<dl class="fields">${entries.map(([label, value]) => `<div><dt>${safe(label)}</dt><dd>${safe(value)}</dd></div>`).join("")}</dl>`;
 const heading = (label, intro) => `<header class="page-head"><p class="eyebrow"><span>Sales</span><span class="eyebrow-date">Demostración · ${date(demoDay,true)}</span></p><h1>${label}</h1><p class="intro">${intro}</p></header>`;
-const riskTag = (color, label) => { const [main, detail] = String(label).split(" · "); return `<span class="risk ${color}" title="${safe(label)}">${safe(main)}</span>${detail ? `<small class="risk-detail">${safe(detail)}</small>` : ""}`; };
+const riskTag = (color, label) => { const [main, detail] = String(label).split(" · "); return `<span class="risk ${color}" title="${safe(label)}">${ico(riskIcon[color] ?? "clock")}${safe(main)}</span>${detail ? `<small class="risk-detail">${safe(detail)}</small>` : ""}`; };
 const pct = new Intl.NumberFormat("es-ES",{ style:"percent", minimumFractionDigits:1, maximumFractionDigits:1, signDisplay:"exceptZero" });
 const columns = (...labels) => `<div class="columns" aria-hidden="true">${labels.map(label => `<span>${label}</span>`).join("")}</div>`;
 const panel = (title, content, style = "") => `<section class="panel ${style}"><div class="panel-head"><h2>${title}</h2></div>${content}</section>`;
@@ -163,12 +163,12 @@ function pricingView() {
   const withTarget = rooms.filter(room => targetPrice(room));
   const mismatched = rooms.filter(room => { const prices = activePrices(room); const target = targetPrice(room); return target && prices.length && prices.some(price => price !== target); });
   const avgRise = withTarget.length ? withTarget.reduce((sum,room) => sum + (targetPrice(room) - currentRent(room)) / currentRent(room),0) / withTarget.length : null;
-  const kpi = (value,label,hint,tone = "") => `<div class="kpi ${tone}"><strong>${value}</strong><span>${label}</span><small>${hint}</small></div>`;
+  const kpi = (value,label,hint,tone = "",icon = "pricing") => `<div class="kpi ${tone}"><i class="kpi-ico">${ico(icon)}</i><strong>${value}</strong><span>${label}</span><small>${hint}</small></div>`;
   return heading("Pricing","Precio de cada unidad en ciclo frente a su renta anterior y al mercado de su zona.") + `
     <section class="kpi-strip" aria-label="Resumen de pricing">
-      ${kpi(rooms.length - withTarget.length,"Sin precio objetivo","Fíjalo antes de ofrecer la renovación o publicar",rooms.length - withTarget.length ? "warn" : "")}
-      ${kpi(mismatched.length,"Publicado distinto del objetivo","Revisa el anuncio o el objetivo",mismatched.length ? "warn" : "")}
-      ${kpi(avgRise == null ? "—" : pct.format(avgRise),"Subida media del objetivo","Frente a la renta anterior")}
+      ${kpi(rooms.length - withTarget.length,"Sin precio objetivo","Fíjalo antes de ofrecer la renovación o publicar",rooms.length - withTarget.length ? "warn" : "","pricing")}
+      ${kpi(mismatched.length,"Publicado distinto del objetivo","Revisa el anuncio o el objetivo",mismatched.length ? "warn" : "","alert")}
+      ${kpi(avgRise == null ? "—" : pct.format(avgRise),"Subida media del objetivo","Frente a la renta anterior","","trend")}
     </section>
     <section class="panel price-panel" aria-label="Precios por unidad">
       <div class="price-table" role="table">

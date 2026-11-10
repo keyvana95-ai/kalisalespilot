@@ -245,6 +245,26 @@ function closingBlock(room, step) {
   return body + past;
 }
 
+const cycleSteps = ["Aviso T−60","Precio","Comercialización","Pagos","Firma"];
+function stageIndex(room) {
+  const cycle = state[room.id];
+  const renewal = renewalFor(room);
+  if (!cycle.opened) return 0;
+  if (renewal.status === "Renovación firmada" || cycle.next?.signed) return cycleSteps.length;
+  if (cycle.next) return nextPaymentStatus(room).ready ? 4 : 3;
+  if (renewal.status === "Aceptada") return 4;
+  if (candidatesFor(room).some(item => item.stage === pendingPaymentsStage)) return 3;
+  if (activePrices(room).length || targetPrice(room)) return 2;
+  return 1;
+}
+function stageTrack(room) {
+  const current = stageIndex(room);
+  return `<ol class="stage-track" aria-label="Etapas del ciclo comercial">${cycleSteps.map((label,index) => {
+    const status = index < current ? "done" : index === current ? "current" : "todo";
+    return `<li class="${status}" ${status === "current" ? 'aria-current="step"' : ""}><span class="dot">${status === "done" ? ico("check") : index + 1}</span><span class="label">${label}</span></li>`;
+  }).join("")}</ol>`;
+}
+
 function cycleView() {
   const [, roomId, block] = cycleRoute();
   const room = rooms.find(item => item.id === roomId);
@@ -256,7 +276,7 @@ function cycleView() {
   const exit = contractualExit(room);
   const plannedExit = cycle.currentDates?.exit;
   const backLabel = ({ jornada:"Mi jornada", pipeline:"Pipeline", "co-livers":"Base Datos Co-livers", "check-in-out/pisos":"Check-in / Check-out" })[cycleOrigin] ?? "Pipeline";
-  return `<p class="crumb"><a href="#${cycleOrigin}">← ${backLabel}</a></p>
+  return `<p class="crumb"><a href="#${cycleOrigin}">${ico("left")}${backLabel}</a></p>
     <header class="page-head cycle-head">
       <p class="eyebrow">CICLO COMERCIAL · FIN CONTRACTUAL ${date(exit,true).toUpperCase()}</p>
       <h1>${locationName(room)}</h1>
@@ -265,8 +285,9 @@ function cycleView() {
         ${plannedExit && plannedExit !== exit ? `<span>Check-out previsto ${date(plannedExit,true)}</span>` : ""}
         <span>${room.ready ? "Disponible para check-in desde " + date(room.ready,true) : "Disponibilidad para check-in por confirmar"} <small>(dato de Community)</small></span></p>
       <p class="facts features-line">${unitFeatures(room)}</p>
-      <div class="chips"><span class="stage-chip">Etapa · ${cycleStage(room)}</span>${riskTag(color,riskLabel)}<small>${dayDiff(demoDay,exit)} días hasta el check-out</small></div>
+      <div class="chips"><span class="stage-chip">Etapa · ${cycleStage(room)}</span>${riskTag(color,riskLabel)}<small><b>${dayDiff(demoDay,exit)}</b> días hasta el check-out</small></div>
     </header>
+    ${stageTrack(room)}
     <section class="next-step ${step ? "" : "done"}" aria-label="Siguiente paso">
       <div><p class="eyebrow">SIGUIENTE PASO</p><p>${step ? step.why : `Ciclo cerrado. No quedan acciones comerciales en ${isWholeFloor(room) ? "este piso" : "esta habitación"}.`}</p>
         ${step?.decision ? '<small><span class="pending-tag">Estado pendiente de Lorenzo</span></small>' : ""}</div>
@@ -301,23 +322,23 @@ function jornadaView() {
   const signatures = rooms.filter(room => primaryStep(room)?.type === "signature").length;
   const limit = addDays(demoDay,30);
   const moves = agendaEvents().filter(event => event.day >= demoDay && event.day <= limit);
-  const kpi = (value,label,hint,href,tone) => `<a class="kpi ${tone}" href="${href}"><strong>${value}</strong><span>${label}</span><small>${hint}</small></a>`;
+  const kpi = (value,label,hint,href,tone,icon) => `<a class="kpi ${tone}" href="${href}"><i class="kpi-ico">${ico(icon)}</i><strong>${value}</strong><span>${label}</span><small>${hint}</small></a>`;
   const card = ({room,step,risk:[color,label]}) => {
     const days = dayDiff(demoDay,contractualExit(room));
     return `<a class="case-card ${color}" href="${cycleLink(room,step.block)}" data-origin="jornada">
       <span class="case-unit"><strong>${isWholeFloor(room) ? safe(room.floor) : unitLabel(room.number)}</strong><small>${isWholeFloor(room) ? "Piso completo" : safe(room.floor)}</small></span>
       <span class="case-task"><strong>${step.label}</strong><small>${safe(step.why)}</small></span>
       <span class="case-risk">${riskTag(color,label)}<small class="case-days"><b>${days}</b> días para el check-out</small></span>
-      <span class="case-go" aria-hidden="true">→</span>
+      <span class="case-go" aria-hidden="true">${ico("right")}</span>
     </a>`;
   };
   const group = (title,list,tone,empty) => `<section class="case-group ${tone}" aria-label="${title}"><h2>${title}<span class="count">${list.length}</span></h2>${list.length ? list.map(card).join("") : `<p class="empty">${empty}</p>`}</section>`;
   return heading("Mi jornada","Lo que requiere atención hoy y los movimientos de los próximos 30 días.") + `
     <section class="kpi-strip" aria-label="Resumen del día">
-      ${kpi(reds,"En riesgo de vacío",`${45} días o menos sin pagos comprobados`,"#pipeline",reds ? "danger" : "")}
-      ${kpi(ambers,"En seguimiento","Ciclos abiertos o con aviso a 60 días","#pipeline",ambers ? "warn" : "")}
-      ${kpi(signatures,"Firmas internas pendientes","Depósito y Entry Fee ya comprobados","#pipeline",signatures ? "ok" : "")}
-      ${kpi(moves.length,"Check-ins y check-outs","En los próximos 30 días","#check-in-out/pisos","")}
+      ${kpi(reds,"En riesgo de vacío",`${45} días o menos sin pagos comprobados`,"#pipeline",reds ? "danger" : "","alert")}
+      ${kpi(ambers,"En seguimiento","Ciclos abiertos o con aviso a 60 días","#pipeline",ambers ? "warn" : "","clock")}
+      ${kpi(signatures,"Firmas internas pendientes","Depósito y Entry Fee ya comprobados","#pipeline",signatures ? "ok" : "","pen")}
+      ${kpi(moves.length,"Check-ins y check-outs","En los próximos 30 días","#check-in-out/pisos","","calendar")}
     </section>
     <div class="jornada-grid">
       <div class="stack">
@@ -327,7 +348,7 @@ function jornadaView() {
       <aside class="panel moves" aria-label="Próximos movimientos">
         <div class="panel-head"><h2>Próximos movimientos</h2><a class="text-button inline" href="#check-in-out/pisos">Ver por piso</a></div>
         ${moves.length ? `<ul>${moves.map(event => `<li><span class="move-date"><b>${new Date(event.day).getUTCDate()}</b>${shortDate.format(new Date(event.day)).replace(/^\d+\s*/,"")}</span>
-          <span><span class="move-type ${event.type}">${event.type === "in" ? "Check-in" : "Check-out"}</span><strong>${safe(event.person.name)}</strong><small>${safe(event.stay.floor)} · ${unitLabel(event.stay.number)}</small></span></li>`).join("")}</ul>` : '<p class="empty">Sin movimientos en 30 días.</p>'}
+          <span><span class="move-type ${event.type}">${ico(event.type)}${event.type === "in" ? "Check-in" : "Check-out"}</span><strong>${safe(event.person.name)}</strong><small>${safe(event.stay.floor)} · ${unitLabel(event.stay.number)}</small></span></li>`).join("")}</ul>` : '<p class="empty">Sin movimientos en 30 días.</p>'}
       </aside>
     </div>`;
 }
@@ -341,7 +362,7 @@ function pipelineRoomRow(room) {
   const [color,label] = risk(room);
   const step = primaryStep(room);
   const activeCandidates = candidatesFor(room).filter(item => item.stage !== closedStage && item.id !== cycle.next?.candidateId).length;
-  return `<a class="row case-row" href="${cycleLink(room)}" data-origin="pipeline">
+  return `<a class="row case-row tone-${color}" href="${cycleLink(room)}" data-origin="pipeline">
     <div><strong>${unitLabel(room.number)}</strong><small>${unitFeatures(room,false)}</small><small>${safe(room.resident)} sale</small></div>
     <div><strong>Check-out: ${date(contractualExit(room))}</strong><small>${room.ready ? "Disponible para check-in desde " + date(room.ready) : "Disponibilidad por confirmar"}</small></div>
     <div><strong>${cycleStage(room)}</strong><small>${cycle.opened ? activeCandidates + (activeCandidates === 1 ? " candidatura activa" : " candidaturas activas") : "Ciclo sin abrir"}</small></div>
@@ -366,7 +387,16 @@ function pipelineView() {
     return { floor, list, counts, worst, toDo, urgent, firstExit:contractualExit(list[0]) };
   }).sort((first,second) => first.worst - second.worst || first.floor.name.localeCompare(second.floor.name,"es"));
   const units = floors.reduce((sum,item) => sum + item.list.length,0);
-  const badge = (n,color,text) => n ? `<span class="risk ${color}">${n} ${text}</span>` : "";
+  const badge = (n,color,text) => n ? `<span class="risk ${color}">${ico(riskIcon[color])}${n} ${text}</span>` : "";
+  const strip = (floor,list) => {
+    const record = realEstateRecords[floor.name];
+    const numbers = record ? Object.keys(record.rooms).map(Number) : list.map(room => room.number);
+    return `<span class="room-strip" aria-label="Habitaciones del piso">${numbers.map(number => {
+      const room = list.find(item => item.number === number);
+      const color = room ? risk(room)[0] : "stable";
+      return `<span class="room-dot ${color}" title="Habitación ${number} · ${room ? risk(room)[1] : "Sin ciclo abierto"}">${number}</span>`;
+    }).join("")}</span>`;
+  };
   const todo = n => n ? `<strong>${n}</strong> ${n === 1 ? "acción pendiente" : "acciones pendientes"}` : "Sin acciones pendientes";
   return heading("Pipeline comercial","Pisos con unidades en ciclo comercial o con aviso a 60 días. Abre un piso para ver sus habitaciones; un piso completo abre directamente su ficha.") +
     `<p class="directory-count muted">${floors.length} pisos · ${units} ${units === 1 ? "unidad" : "unidades"} en seguimiento · Los pisos con riesgo de vacío o firma interna pendiente se abren solos</p><div class="stack">` +
@@ -375,18 +405,18 @@ function pipelineView() {
         const room = list[0];
         const [color,label] = risk(room);
         const step = primaryStep(room);
-        return `<a class="panel floor-group whole-floor" href="${cycleLink(room)}" data-origin="pipeline">
+        return `<a class="panel floor-group whole-floor tone-${color}" href="${cycleLink(room)}" data-origin="pipeline">
           <div class="floor-head">
-            <div class="floor-name"><h2>${safe(floor.name)}</h2><small>Piso completo · check-out ${date(contractualExit(room))} · ${safe(room.resident)} (titular)</small></div>
+            <div class="floor-name"><h2>${ico("pisos","floor-ico")}${safe(floor.name)}</h2><small>Piso completo · check-out ${date(contractualExit(room))} · ${safe(room.resident)} (titular)</small></div>
             <div class="floor-badges">${riskTag(color,label)}<small>${cycleStage(room)}</small></div>
             <div class="floor-todo">${step ? `<span class="next-text">${step.label}</span>` : "Ciclo cerrado"}</div>
-            <span class="go" aria-hidden="true">→</span>
+            <span class="go" aria-hidden="true">${ico("right")}</span>
           </div></a>`;
       }
       const isOpen = openFloors.get(floor.name) ?? urgent;
       return `<details class="panel floor-group pipeline" data-floor="${safe(floor.name)}" ${isOpen ? "open" : ""}>
         <summary class="floor-head">
-          <div class="floor-name"><h2>${safe(floor.name)}</h2><small>${list.length} ${list.length === 1 ? "habitación" : "habitaciones"} en seguimiento · próximo check-out ${date(firstExit)}${realEstateRecords[floor.name] ? ` · <a class="text-button inline" href="#pisos/${realEstateRecords[floor.name].slug}">Ficha del piso</a>` : ""}</small></div>
+          <div class="floor-name"><h2>${ico("pisos","floor-ico")}${safe(floor.name)}</h2>${strip(floor,list)}<small>${list.length} ${list.length === 1 ? "habitación" : "habitaciones"} en seguimiento · próximo check-out ${date(firstExit)}${realEstateRecords[floor.name] ? ` · <a class="text-button inline" href="#pisos/${realEstateRecords[floor.name].slug}">Ficha del piso</a>` : ""}</small></div>
           <div class="floor-badges">${badge(counts.red,"red","en riesgo de vacío")}${badge(counts.amber,"amber","en seguimiento")}${badge(counts.green,"green","sin riesgo")}</div>
           <div class="floor-todo">${todo(toDo)}</div>
         </summary>
