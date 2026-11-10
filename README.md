@@ -6,7 +6,7 @@ Piloto estático con datos ficticios, sin dependencias ni servicios externos.
 
 Desde esta carpeta, ejecuta `python3 -m http.server 4173 --bind 127.0.0.1` y abre `http://127.0.0.1:4173/`.
 
-0. Al abrir el piloto aparece la **pantalla de inicio** del Sistema Operativo KALI con las siete áreas (Management, Finance, Legal, HR, Sales, Real Estate y Community). Solo **Sales** está operativa: su tarjeta lleva a **Mi jornada**. Las demás aparecen como **Próximamente**. Desde cualquier pantalla de Sales, **← Inicio** o el logo devuelven al inicio.
+0. Al abrir el piloto aparece la **pantalla de inicio** del Sistema Operativo KALI con las ocho áreas (Management, Finance, Legal, HR, Sales, Real Estate, Community y Design). Solo **Sales** está operativa: su tarjeta lleva a **Mi jornada**. Las demás aparecen como **Próximamente**. Desde cualquier pantalla de Sales, **← Inicio** o el logo devuelven al inicio.
 1. En **Mi jornada** aparecen solo los casos que requieren atención. Cada caso abre su **ficha del ciclo** en el bloque correspondiente.
 2. En **Pipeline** se ven los pisos con su resumen de riesgo y acciones pendientes. Abre **Narciso Serra 8** y pulsa la **Habitación 3**.
 3. En **Cierre**, comprueba el depósito y el Entry Fee del ejemplo. Con ambos comprobados, el siguiente paso es **Registrar firma interna**. Al guardar la firma de prueba, la renovación del residente saliente queda sin efecto.

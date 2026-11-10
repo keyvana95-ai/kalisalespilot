@@ -8,7 +8,8 @@ const departments = [
   { name:"HR", text:"Gestión de personas y equipo interno." },
   { name:"SALES", text:"Captación, pricing, comercialización y firma.", href:"#jornada" },
   { name:"REAL ESTATE", text:"Captación de pisos y ficha de los inmuebles." },
-  { name:"COMMUNITY", text:"Experiencia del co-liver, convivencia, incidencias y servicios en piso." }
+  { name:"COMMUNITY", text:"Experiencia del co-liver, convivencia, incidencias y servicios en piso." },
+  { name:"DESIGN", text:"Reforma y diseño interior de los pisos." }
 ];
 
 function hubView() {

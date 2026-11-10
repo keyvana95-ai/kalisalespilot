@@ -85,7 +85,9 @@ const locationName = room => room.unit === "piso" ? `${room.floor} · piso compl
 const view = () => ["", "#", "#inicio"].includes(location.hash) ? "inicio" : location.hash.startsWith("#ciclo/") ? "ciclo" : location.hash.startsWith("#pisos/") ? "pisos" : location.hash === "#check-in-out/pisos" ? "check-in-out" : ["pipeline", "pricing", "pisos", "co-livers", "check-in-out"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "jornada";
 const action = (room, type, label, style = "secondary") => `<button type="button" class="${style}" data-action="${type}" data-room="${room.id}">${label}</button>`;
 const fields = entries => `<dl class="fields">${entries.map(([label, value]) => `<div><dt>${safe(label)}</dt><dd>${safe(value)}</dd></div>`).join("")}</dl>`;
-const heading = (label, intro) => `<header class="page-head"><p class="eyebrow">SALES · DEMOSTRACIÓN DEL 10 NOV 2026</p><h1>${label}</h1><p class="intro">${intro}</p></header>`;
+const heading = (label, intro) => `<header class="page-head"><p class="eyebrow"><span>Sales</span><span class="eyebrow-date">Demostración · ${date(demoDay,true)}</span></p><h1>${label}</h1><p class="intro">${intro}</p></header>`;
+const riskTag = (color, label) => { const [main, detail] = String(label).split(" · "); return `<span class="risk ${color}" title="${safe(label)}">${safe(main)}</span>${detail ? `<small class="risk-detail">${safe(detail)}</small>` : ""}`; };
+const pct = new Intl.NumberFormat("es-ES",{ style:"percent", minimumFractionDigits:1, maximumFractionDigits:1, signDisplay:"exceptZero" });
 const columns = (...labels) => `<div class="columns" aria-hidden="true">${labels.map(label => `<span>${label}</span>`).join("")}</div>`;
 const panel = (title, content, style = "") => `<section class="panel ${style}"><div class="panel-head"><h2>${title}</h2></div>${content}</section>`;
 const targetPrice = room => state[room.id].pricing?.target ?? room.target;
@@ -149,18 +151,53 @@ function risk(room) {
 }
 
 function pricingView() {
-  const ordered = [...rooms].sort((first,second) => Number(Boolean(targetPrice(first))) - Number(Boolean(targetPrice(second))));
-  return heading("Pricing","Consulta la renta anterior, guarda comparables y fija un precio objetivo por unidad y ciclo.") +
-    `<div class="stack pricing-board">${ordered.map(room => {
-      const cycle = state[room.id];
-      const next = !cycle.opened ? `<a class="text-button" href="#ciclo/${room.id}" data-origin="pipeline">Abrir la ficha del ciclo</a>`
-        : listingsFor(room).length ? action(room,"publication","Gestionar anuncios")
-        : !cycle.next && targetPrice(room) ? action(room,"publication","Preparar publicación") : "";
-      return `<section class="panel">
-        <div class="panel-head"><h2>${locationName(room)}</h2><span class="muted">${cycle.next ? nextStage(room) : targetPrice(room) ? "Precio objetivo definido" : "Precio objetivo pendiente"}</span></div>
-        <div class="pricing-room">${pricingDetail(room,true)}${next}</div>
-      </section>`;
-    }).join("")}</div>`;
+  const info = room => {
+    const name = catalogFloor(room.floor).name;
+    const record = typeof realEstateRecords !== "undefined" ? realEstateRecords[name] : null;
+    const whole = room.unit === "piso";
+    const m2 = whole ? record?.m2 : record?.rooms?.[room.number]?.m2;
+    const zone = record?.barrio ? zoneStats().find(item => item.barrio === record.barrio && item.distrito === record.distrito) : null;
+    return { record, whole, m2, zone };
+  };
+  const ordered = [...rooms].sort((first,second) => Number(Boolean(targetPrice(first))) - Number(Boolean(targetPrice(second))) || contractualExit(first).localeCompare(contractualExit(second)));
+  const withTarget = rooms.filter(room => targetPrice(room));
+  const mismatched = rooms.filter(room => { const prices = activePrices(room); const target = targetPrice(room); return target && prices.length && prices.some(price => price !== target); });
+  const avgRise = withTarget.length ? withTarget.reduce((sum,room) => sum + (targetPrice(room) - currentRent(room)) / currentRent(room),0) / withTarget.length : null;
+  const kpi = (value,label,hint,tone = "") => `<div class="kpi ${tone}"><strong>${value}</strong><span>${label}</span><small>${hint}</small></div>`;
+  return heading("Pricing","Precio de cada unidad en ciclo frente a su renta anterior y al mercado de su zona.") + `
+    <section class="kpi-strip" aria-label="Resumen de pricing">
+      ${kpi(rooms.length - withTarget.length,"Sin precio objetivo","Fíjalo antes de ofrecer la renovación o publicar",rooms.length - withTarget.length ? "warn" : "")}
+      ${kpi(mismatched.length,"Publicado distinto del objetivo","Revisa el anuncio o el objetivo",mismatched.length ? "warn" : "")}
+      ${kpi(avgRise == null ? "—" : pct.format(avgRise),"Subida media del objetivo","Frente a la renta anterior")}
+    </section>
+    <section class="panel price-panel" aria-label="Precios por unidad">
+      <div class="price-table" role="table">
+        <div class="price-row price-head" role="row"><span role="columnheader">Unidad</span><span role="columnheader">Renta anterior</span><span role="columnheader">Precio objetivo</span><span role="columnheader">Publicado</span><span role="columnheader">€/m² · mercado de la zona</span><span role="columnheader">Etapa</span><span role="columnheader"></span></div>
+        ${ordered.map(room => {
+          const cycle = state[room.id];
+          const { record, whole, m2, zone } = info(room);
+          const target = targetPrice(room);
+          const rent = currentRent(room);
+          const prices = activePrices(room);
+          const differs = target && prices.length && prices.some(price => price !== target);
+          const ref = target ?? rent;
+          const perM2Value = m2 ? ref / m2 : null;
+          const market = !whole && zone?.comps.length ? zone.compMedianM2 : null;
+          const gap = perM2Value && market ? perM2Value / market - 1 : null;
+          const canEdit = cycle.opened && !cycle.next;
+          return `<div class="price-row" role="row">
+            <span role="cell" data-label="Unidad"><strong>${whole ? safe(room.floor) : unitLabel(room.number)}</strong><small>${whole ? "Piso completo" : safe(room.floor)}${typeof unitFeatures === "function" ? " · " + unitFeatures(room,false).split(" · ").slice(0,2).join(" · ") : ""}</small></span>
+            <span role="cell" data-label="Renta anterior">${money.format(rent)}</span>
+            <span role="cell" data-label="Precio objetivo">${target ? `<strong>${money.format(target)}</strong><small class="${target >= rent ? "up" : "down"}">${pct.format((target - rent) / rent)} vs. anterior</small>` : '<span class="pending-re">Por definir</span>'}</span>
+            <span role="cell" data-label="Publicado">${prices.length ? publishedPriceLabel(room).replace(" / mes","") : '<span class="muted">Sin anuncio</span>'}${differs ? '<small class="warn-text">Distinto del objetivo</small>' : ""}</span>
+            <span role="cell" data-label="€/m² · mercado">${perM2Value ? `${eurM2(perM2Value)}${market ? `<small>Zona ${eurM2(market)} · <b class="${Math.abs(gap) > 0.15 ? "warn-text" : ""}">${pct.format(gap)}</b></small>` : `<small class="muted">${whole ? "€/m² del piso" : record?.barrio ? "Sin comparables" : "Zona pendiente"}</small>`}` : '<span class="muted">m² pendientes</span>'}</span>
+            <span role="cell" data-label="Etapa"><span class="stage-pill">${cycleStage(room)}</span></span>
+            <span role="cell" class="price-actions">${canEdit ? action(room,"pricing",target ? "Editar precio" : "Fijar precio",target ? "secondary" : "primary") : ""}<a class="text-button inline" href="#ciclo/${room.id}" data-origin="pipeline">Ficha →</a></span>
+          </div>`;
+        }).join("")}
+      </div>
+      <p class="price-note muted">€/m² de habitación = precio objetivo (o renta anterior si no hay) ÷ m² de la habitación, frente a la mediana de comparables externos de su barrio. Los anuncios se gestionan desde la ficha del ciclo.</p>
+    </section>`;
 }
 
 const personKey = name => Object.hasOwn(people,name) ? people[name][0] : null;
