@@ -14,7 +14,7 @@ const departments = [
 function hubView() {
   return `<section class="hub" aria-labelledby="hub-title">
     <header class="hub-brand">
-      <img src="./kali-logo-carbon.svg" width="190" height="60" alt="KALI Co-Living">
+      <img src="./kali-logo-crema.svg" width="190" height="60" alt="KALI Co-Living">
       <h1 id="hub-title" class="hub-subtitle">Sistema Operativo KALI</h1>
       <p class="hub-tagline">Selecciona un área para acceder a sus flujos y paneles.</p>
     </header>

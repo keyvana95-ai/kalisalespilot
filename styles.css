@@ -447,3 +447,17 @@ nav a[aria-current="page"] { box-shadow:inset 0 -2px 0 var(--cream); }
 .btn-home:hover { background:rgb(255 242 226 / .16); }
 .masthead .demo { color:rgb(255 242 226 / .88); }
 .masthead :focus-visible { outline-color:var(--cream); }
+
+/* Pantalla de inicio sobre el rojo de la web de KALI (#9F2322) */
+html:has(body.is-hub),body.is-hub { background:var(--brick); }
+body.is-hub .hub-subtitle { color:rgb(255 242 226 / .85); }
+body.is-hub .hub-tagline { color:rgb(255 242 226 / .92); }
+body.is-hub .dept-card { background:var(--cream); border-color:transparent; box-shadow:0 1px 2px rgb(0 0 0 / .08),0 8px 22px -12px rgb(0 0 0 / .35); }
+body.is-hub .dept-card.is-soon { background:color-mix(in srgb,var(--cream) 86%,var(--brick)); box-shadow:none; }
+body.is-hub .dept-card.is-soon .dept-title,body.is-hub .dept-card.is-soon .dept-desc,body.is-hub .dept-card.is-soon .dept-code { color:rgb(39 39 39 / .62); }
+body.is-hub .dept-card.active-pilot { background:var(--cream); border:2px solid var(--cream); box-shadow:0 0 0 4px rgb(255 242 226 / .35),0 14px 30px -12px rgb(0 0 0 / .45); }
+body.is-hub .dept-card.active-pilot:hover { border-color:var(--cream); box-shadow:0 0 0 6px rgb(255 242 226 / .45),0 18px 36px -12px rgb(0 0 0 / .5); }
+body.is-hub .dept-card.active-pilot:focus-visible { outline-color:var(--cream); }
+body.is-hub footer.wrap,body.is-hub footer .text-button { color:rgb(255 242 226 / .88); }
+body.is-hub footer .text-button:hover { background:rgb(255 242 226 / .12); }
+body.is-hub #feedback:not(:empty) { color:var(--cream); }
