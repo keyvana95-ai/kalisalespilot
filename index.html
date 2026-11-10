@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es" data-type="software">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="page-type" content="software">
+  <meta name="site-kind" content="software">
+  <meta name="description" content="Piloto interno de Sales de KALI Co-Living.">
+  <meta name="theme-color" content="#18392e">
+  <title>KALI Co-Living · Piloto Sales</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Ir al contenido</a>
+  <header class="masthead">
+    <div class="wrap masthead-inner">
+      <a class="brand" href="#jornada">KALI <span>CO-LIVING</span></a>
+      <nav aria-label="Vistas del piloto">
+        <a href="#jornada">Mi jornada</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#community">Community <span id="community-count" hidden></span></a>
+      </nav>
+      <span class="demo">Piloto · Datos ficticios</span>
+    </div>
+  </header>
+  <main class="wrap" id="main" tabindex="-1"></main>
+  <div id="feedback" class="wrap" role="status" aria-live="polite"></div>
+  <dialog id="dialog" aria-labelledby="dialog-title">
+    <div class="dialog-head">
+      <div><p id="dialog-context" class="eyebrow"></p><h2 id="dialog-title"></h2></div>
+      <form method="dialog"><button type="submit" class="secondary" autofocus>Cerrar</button></form>
+    </div>
+    <div id="dialog-body" class="dialog-body"></div>
+  </dialog>
+  <footer class="wrap"><span>KALI Co-Living · Piloto interno</span><button id="reset" type="button" class="text-button">Reiniciar demostración</button></footer>
+</body>
+</html>
