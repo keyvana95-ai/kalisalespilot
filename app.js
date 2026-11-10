@@ -82,7 +82,7 @@ const date = (value, full = false) => value ? (full ? fullDate : shortDate).form
 const dayDiff = (from, to) => Math.round((Date.parse(to) - Date.parse(from)) / 86400000);
 const unitLabel = number => number == null ? "Piso completo" : `Habitación ${number}`;
 const locationName = room => room.unit === "piso" ? `${room.floor} · piso completo` : `Habitación ${room.number} · ${room.floor}`;
-const view = () => ["", "#", "#inicio"].includes(location.hash) ? "inicio" : location.hash.startsWith("#ciclo/") ? "ciclo" : location.hash.startsWith("#pisos/") ? "pisos" : ["pipeline", "pricing", "pisos", "co-livers", "check-in-out"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "jornada";
+const view = () => ["", "#", "#inicio"].includes(location.hash) ? "inicio" : location.hash.startsWith("#ciclo/") ? "ciclo" : location.hash.startsWith("#pisos/") ? "pisos" : location.hash === "#check-in-out/pisos" ? "check-in-out" : ["pipeline", "pricing", "pisos", "co-livers", "check-in-out"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "jornada";
 const action = (room, type, label, style = "secondary") => `<button type="button" class="${style}" data-action="${type}" data-room="${room.id}">${label}</button>`;
 const fields = entries => `<dl class="fields">${entries.map(([label, value]) => `<div><dt>${safe(label)}</dt><dd>${safe(value)}</dd></div>`).join("")}</dl>`;
 const heading = (label, intro) => `<header class="page-head"><p class="eyebrow">SALES · DEMOSTRACIÓN DEL 10 NOV 2026</p><h1>${label}</h1><p class="intro">${intro}</p></header>`;
@@ -234,7 +234,7 @@ function agendaView() {
       <span>${index + 1}</span><span class="agenda-marks" aria-hidden="true">${entries ? `<span class="agenda-in">${entries}</span>` : ""}${exits ? `<span class="agenda-out">${exits}</span>` : ""}</span>
     </button>`;
   }).join("");
-  return heading("Check-in / Check-out","Consulta las fechas de check-in y check-out. Para registrarlas o cambiarlas, abre Base Datos Co-livers.") + `
+  return heading("Check-in / Check-out","Consulta las fechas de check-in y check-out. Para registrarlas o cambiarlas, abre Base Datos Co-livers.") + agendaTabs("calendario") + `
     <div class="stack">
       <section class="panel agenda" aria-label="Calendario mensual">
         <div class="panel-head agenda-head"><button type="button" class="secondary" data-agenda-month="-1" aria-label="Mes anterior">‹</button>
@@ -291,7 +291,7 @@ function renderDirectoryRows() {
 function render() {
   const active = view();
   document.body.classList.toggle("is-hub", active === "inicio");
-  main.innerHTML = ({ inicio:hubView, jornada:jornadaView, pipeline:pipelineView, ciclo:cycleView, pricing:pricingView, pisos:pisosView, "co-livers":directoryView, "check-in-out":agendaView })[active]();
+  main.innerHTML = ({ inicio:hubView, jornada:jornadaView, pipeline:pipelineView, ciclo:cycleView, pricing:pricingView, pisos:pisosView, "co-livers":directoryView, "check-in-out":() => location.hash === "#check-in-out/pisos" ? occupancyView() : agendaView() })[active]();
   if (active === "co-livers") renderDirectoryRows();
   if (active === "ciclo") afterCycleRender();
   if (active === "co-livers" && pendingResident) {
@@ -299,8 +299,8 @@ function render() {
     pendingResident = "";
     showResident(key,main.querySelector(`[data-resident="${CSS.escape(key)}"]`));
   }
-  const navActive = active === "ciclo" ? (cycleOrigin === "jornada" ? "jornada" : cycleOrigin === "co-livers" ? "co-livers" : "pipeline") : active;
-  for (const link of document.querySelectorAll("nav a")) {
+  const navActive = active === "ciclo" ? (cycleOrigin === "jornada" ? "jornada" : cycleOrigin === "co-livers" ? "co-livers" : cycleOrigin.startsWith("check-in-out") ? "check-in-out" : "pipeline") : active;
+  for (const link of document.querySelectorAll(".masthead nav a")) {
     if (link.hash === "#" + navActive) link.setAttribute("aria-current","page");
     else link.removeAttribute("aria-current");
   }

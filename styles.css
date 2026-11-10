@@ -374,3 +374,68 @@ body.is-hub main.wrap { padding-top:clamp(36px,8vh,72px); }
 .btn-home:hover { background:rgb(255 242 226 / .12); }
 @media(max-width:880px) { .masthead-right { margin-left:auto; } }
 @media(prefers-reduced-motion:reduce) { .dept-card.active-pilot:hover { transform:none; } }
+
+/* Check-in / Check-out · vista Por piso */
+.agenda-tabs { display:flex; gap:4px; margin:-6px 0 18px; border-bottom:1px solid var(--line); }
+.agenda-tabs a { padding:9px 14px; text-decoration:none; font-weight:650; color:var(--muted); border-bottom:3px solid transparent; margin-bottom:-1px; }
+.agenda-tabs a[aria-current="page"] { color:var(--ink); border-bottom-color:var(--brick); }
+.agenda-tabs a:hover { color:var(--ink); }
+:root { --occ-none:#7d8c7a; --occ-amber:#c98a2e; --occ-red:var(--brick); --occ-green:#3d5c40; --occ-empty:#9a9389; --occ-late:#6b3fa0; }
+.occ-chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap; background:var(--soft); color:var(--ink); }
+.occ-chip .dot { width:9px; height:9px; border-radius:50%; background:currentColor; flex:none; }
+.occ-chip.none { color:#4f5c4c; background:color-mix(in srgb,var(--occ-none) 14%,var(--cream)); }
+.occ-chip.amber { color:#7a4f12; background:color-mix(in srgb,var(--occ-amber) 24%,var(--cream)); }
+.occ-chip.red { color:var(--brick); background:color-mix(in srgb,var(--salmon) 34%,var(--cream)); }
+.occ-chip.green { color:var(--occ-green); background:color-mix(in srgb,#5e7a5a 18%,var(--cream)); }
+.occ-chip.empty { color:#5d574f; background:transparent; border:1px dashed var(--occ-empty); }
+.occ-chip.late { color:var(--occ-late); background:color-mix(in srgb,var(--occ-late) 14%,var(--cream)); }
+.occ-chip.small { padding:2px 8px; font-size:12px; }
+.occ-summary { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding:12px 16px; margin-bottom:16px; }
+.occ-total { margin-left:auto; font-size:12px; }
+.occ-head { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:10px 18px; padding:14px 16px; border-bottom:1px solid var(--line); }
+.occ-head h2 { font:500 22px/1.15 Georgia,serif; }
+.occ-head small { display:block; color:var(--muted); margin-top:2px; }
+.occ-counts { display:flex; flex-wrap:wrap; gap:6px; }
+.occ-piso.has-alerts { border-color:color-mix(in srgb,var(--brick) 35%,var(--line)); }
+.occ-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,1.2fr) minmax(0,.95fr) minmax(0,.95fr) minmax(0,1.3fr) minmax(170px,1.5fr); gap:10px 14px; align-items:center; padding:10px 16px; border-top:1px solid var(--line); color:inherit; text-decoration:none; font-size:14px; position:relative; }
+.occ-row:first-child { border-top:0; }
+a.occ-row:hover { background:var(--soft); }
+.occ-row small { display:block; color:var(--muted); font-size:12px; margin-top:3px; }
+.occ-colhead { background:var(--ground); color:var(--muted); font-size:12px; font-weight:650; }
+.occ-row.red { box-shadow:inset 4px 0 0 var(--occ-red); } .occ-row.amber { box-shadow:inset 4px 0 0 var(--occ-amber); }
+.occ-row.late { box-shadow:inset 4px 0 0 var(--occ-late); } .occ-row.green { box-shadow:inset 4px 0 0 var(--occ-green); }
+.occ-room { display:flex; align-items:center; gap:9px; }
+.occ-led { width:14px; height:14px; border-radius:50%; flex:none; background:var(--occ-none); box-shadow:0 0 0 3px color-mix(in srgb,var(--occ-none) 22%,transparent); }
+.occ-led.amber { background:var(--occ-amber); box-shadow:0 0 0 3px color-mix(in srgb,var(--occ-amber) 28%,transparent); }
+.occ-led.red { background:var(--occ-red); box-shadow:0 0 0 3px color-mix(in srgb,var(--occ-red) 26%,transparent); animation:occPulse 1.8s ease-in-out infinite; }
+.occ-led.green { background:var(--occ-green); box-shadow:0 0 0 3px color-mix(in srgb,var(--occ-green) 24%,transparent); }
+.occ-led.empty { background:transparent; border:2px dashed var(--occ-empty); box-shadow:none; }
+.occ-led.late { background:var(--occ-late); box-shadow:0 0 0 3px color-mix(in srgb,var(--occ-late) 24%,transparent); }
+@keyframes occPulse { 50% { box-shadow:0 0 0 6px color-mix(in srgb,var(--occ-red) 10%,transparent); } }
+.pending-cm { color:var(--amber); font-weight:600; }
+.tl { position:relative; height:14px; }
+.tl-track { position:absolute; inset:5px 0; border-radius:3px; background:var(--soft); }
+.tl-bar { position:absolute; top:2px; height:10px; border-radius:4px; background:var(--occ-none); }
+.tl-bar.current.amber { background:var(--occ-amber); } .tl-bar.current.red { background:var(--occ-red); } .tl-bar.current.green { background:var(--occ-green); } .tl-bar.current.late { background:var(--occ-late); }
+.tl-bar.next { background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--occ-green) 55%,var(--cream)) 0 4px,color-mix(in srgb,var(--occ-green) 30%,var(--cream)) 4px 8px); }
+.tl-bar.next.committed { background:var(--occ-green); opacity:.85; }
+.tl-mark { position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--ink); opacity:.45; }
+.tl-gap { color:var(--brick-deep) !important; font-weight:600; } .tl-gap.open { color:var(--muted) !important; font-weight:500; }
+.occ-legend { display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px 12px; align-items:center; padding:14px 16px; margin-top:16px; }
+.occ-legend small { color:var(--muted); }
+.legend-tl { position:relative; display:inline-block; width:60px; height:14px; } .tl-mark.static { left:28px; }
+@media(max-width:1000px) {
+  .occ-colhead { display:none; }
+  .occ-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .occ-row > :first-child,.occ-row > :last-child { grid-column:1 / -1; }
+  .occ-row [data-label]::before { content:attr(data-label); display:block; font-size:11px; color:var(--muted); font-weight:650; }
+  .occ-row > :first-child[data-label]::before { display:none; }
+  .occ-head { grid-template-columns:minmax(0,1fr) auto; }
+  .occ-counts { grid-column:1 / -1; order:3; }
+  .occ-total { margin-left:0; width:100%; }
+}
+@media(prefers-reduced-motion:reduce) { .occ-led.red { animation:none; } }
+/* Ajustes: "Sin alerta" neutro para que destaquen las alertas */
+:root { --occ-none:#b3aa9e; }
+.occ-chip.none { color:#5d574f; background:color-mix(in srgb,var(--occ-none) 20%,var(--cream)); }
+.occ-row .occ-chip { white-space:normal; }

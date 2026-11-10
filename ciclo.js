@@ -255,7 +255,7 @@ function cycleView() {
   const [color, riskLabel] = risk(room);
   const exit = contractualExit(room);
   const plannedExit = cycle.currentDates?.exit;
-  const backLabel = ({ jornada:"Mi jornada", pipeline:"Pipeline", "co-livers":"Base Datos Co-livers" })[cycleOrigin] ?? "Pipeline";
+  const backLabel = ({ jornada:"Mi jornada", pipeline:"Pipeline", "co-livers":"Base Datos Co-livers", "check-in-out/pisos":"Check-in / Check-out" })[cycleOrigin] ?? "Pipeline";
   return `<p class="crumb"><a href="#${cycleOrigin}">← ${backLabel}</a></p>
     <header class="page-head cycle-head">
       <p class="eyebrow">CICLO COMERCIAL · FIN CONTRACTUAL ${date(exit,true).toUpperCase()}</p>
