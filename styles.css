@@ -344,3 +344,33 @@ a.whole-floor .floor-head::after { content:none; }
 .real-chip { background:color-mix(in srgb,#5e7a5a 16%,var(--cream)); color:var(--green); }
 .example-chip { background:var(--soft); color:var(--muted); }
 #main:focus { outline:none; }
+
+/* Pantalla de inicio · Sistema Operativo KALI */
+body.is-hub .masthead,body.is-hub .skip { display:none; }
+body.is-hub main.wrap { padding-top:clamp(36px,8vh,72px); }
+.hub { max-width:1100px; margin:0 auto; display:grid; gap:clamp(30px,5vh,50px); animation:arrive .24s ease-out; }
+.hub-brand { text-align:center; display:grid; justify-items:center; gap:6px; }
+.hub-brand img { width:190px; height:auto; margin-bottom:12px; }
+.hub-subtitle { font:700 11px/1.4 system-ui,sans-serif; letter-spacing:.25em; text-transform:uppercase; color:var(--muted); margin:0; }
+.hub-tagline { font-size:14px; color:var(--muted); }
+.dept-grid { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; }
+.dept-grid > li { display:grid; }
+.dept-card { display:flex; flex-direction:column; min-height:170px; padding:22px 24px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:inherit; text-decoration:none; }
+.dept-card .card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:14px; }
+.dept-code { font-size:11px; font-weight:700; letter-spacing:.15em; color:var(--muted); }
+.dept-title { font:600 22px/1.2 Georgia,serif; margin:0 0 6px; }
+.dept-desc { font-size:13px; line-height:1.45; color:var(--muted); }
+.badge-pilot,.badge-soon { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:3px 8px; border-radius:999px; white-space:nowrap; }
+.badge-pilot { background:var(--brick); color:var(--cream); }
+.badge-soon { background:var(--soft); color:var(--muted); }
+.dept-card.is-soon { cursor:default; }
+.dept-card.is-soon .dept-title { color:color-mix(in srgb,var(--ink) 70%,transparent); }
+.dept-card.active-pilot { border:2px solid var(--brick); background:color-mix(in srgb,var(--salmon) 10%,var(--surface)); transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease; }
+.dept-card.active-pilot:hover { transform:translateY(-2px); border-color:var(--brick-deep); box-shadow:0 10px 24px -10px rgb(39 39 39 / .18); }
+.dept-card.active-pilot:focus-visible { outline-offset:4px; }
+.card-footer { margin-top:auto; padding-top:16px; display:flex; justify-content:space-between; align-items:center; font-size:12.5px; font-weight:700; color:var(--brick); }
+.masthead-right { display:flex; align-items:center; gap:14px; }
+.btn-home { min-height:36px; display:inline-flex; align-items:center; padding:6px 12px; border:1px solid rgb(255 242 226 / .3); border-radius:7px; color:var(--cream); text-decoration:none; font-size:12.5px; font-weight:600; white-space:nowrap; }
+.btn-home:hover { background:rgb(255 242 226 / .12); }
+@media(max-width:880px) { .masthead-right { margin-left:auto; } }
+@media(prefers-reduced-motion:reduce) { .dept-card.active-pilot:hover { transform:none; } }
