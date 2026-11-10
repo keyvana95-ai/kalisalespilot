@@ -2,14 +2,14 @@
 
 /* Pantalla de inicio del Sistema Operativo KALI. Solo Sales está operativa. */
 const departments = [
-  { name:"MANAGEMENT", text:"Dirección general y seguimiento de la operación." },
-  { name:"FINANCE", text:"Cobros, fianzas y tesorería." },
-  { name:"LEGAL", text:"Contratos y normativa." },
-  { name:"HR", text:"Gestión de personas y equipo interno." },
-  { name:"SALES", text:"Captación, pricing, comercialización y firma.", href:"#jornada" },
-  { name:"REAL ESTATE", text:"Captación de pisos y ficha de los inmuebles." },
-  { name:"COMMUNITY", text:"Experiencia del co-liver, convivencia, incidencias y servicios en piso." },
-  { name:"DESIGN", text:"Reforma y diseño interior de los pisos." }
+  { name:"MANAGEMENT", icon:"compass", text:"Dirección general y seguimiento de la operación." },
+  { name:"FINANCE", icon:"wallet", text:"Cobros, fianzas y tesorería." },
+  { name:"LEGAL", icon:"scale", text:"Contratos y normativa." },
+  { name:"HR", icon:"users", text:"Gestión de personas y equipo interno." },
+  { name:"SALES", icon:"handshake", text:"Captación, pricing, comercialización y firma.", href:"#jornada" },
+  { name:"REAL ESTATE", icon:"pisos", text:"Captación de pisos y ficha de los inmuebles." },
+  { name:"COMMUNITY", icon:"househeart", text:"Experiencia del co-liver, convivencia, incidencias y servicios en piso." },
+  { name:"DESIGN", icon:"pencilruler", text:"Reforma y diseño interior de los pisos." }
 ];
 
 function hubView() {
@@ -21,10 +21,9 @@ function hubView() {
     </header>
     <ul class="dept-grid" role="list">
       ${departments.map((dept,index) => {
-        const code = `DEP · ${String(index + 1).padStart(2,"0")}`;
-        const body = `<div class="card-top"><span class="dept-code">${code}</span>${dept.href ? '<span class="badge-pilot">Piloto activo</span>' : '<span class="badge-soon">Próximamente</span>'}</div>
+        const body = `<div class="card-top"><span class="dept-icon">${ico(dept.icon)}</span>${dept.href ? '<span class="badge-pilot">Piloto activo</span>' : '<span class="badge-soon">Próximamente</span>'}</div>
           <h2 class="dept-title">${dept.name}</h2><p class="dept-desc">${dept.text}</p>`;
-        return `<li>${dept.href
+        return `<li style="--i:${index}">${dept.href
           ? `<a class="dept-card active-pilot" href="${dept.href}">${body}<span class="card-footer"><span>Abrir Mi jornada</span><span aria-hidden="true">→</span></span></a>`
           : `<div class="dept-card is-soon" aria-disabled="true">${body}</div>`}</li>`;
       }).join("")}

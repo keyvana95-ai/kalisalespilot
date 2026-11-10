@@ -688,3 +688,34 @@ dialog { border-radius:16px; }
 @media(max-width:900px) { .piso-kpis { grid-template-columns:1fr 1fr; } }
 .zone-head { background:var(--soft); text-transform:uppercase; font-size:11px; letter-spacing:.06em; font-weight:700; }
 .zone-row:not(.zone-head) { font-variant-numeric:tabular-nums; }
+
+/* ===== Inicio v2 ===== */
+html:has(body.is-hub),body.is-hub { background-color:var(--brick-deep); }
+body.is-hub { min-height:100vh; display:flex; flex-direction:column;
+  background:
+    radial-gradient(circle at 104% 108%, transparent 0 15%, rgb(255 242 226 / .055) 15.2% 19%, transparent 19.2% 24%, rgb(255 242 226 / .045) 24.2% 28%, transparent 28.2% 33%, rgb(255 242 226 / .035) 33.2% 37%, transparent 37.2%),
+    radial-gradient(120% 90% at 20% 0%, #a92a28 0%, var(--brick) 45%, #7d1a19 100%);
+  }
+body.is-hub main.wrap { flex:1; display:grid; align-content:center; padding-top:clamp(28px,5vh,56px); padding-bottom:clamp(20px,4vh,40px); }
+body.is-hub footer #reset { display:none; }
+body.is-hub footer.wrap { justify-content:center; opacity:.75; }
+.hub-subtitle { font-family:var(--display); }
+.dept-grid { gap:16px; }
+.dept-grid > li { animation:hub-in .45s cubic-bezier(.2,.7,.2,1) both; animation-delay:calc(var(--i) * 45ms + 60ms); }
+@keyframes hub-in { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+.dept-icon { display:grid; place-items:center; width:42px; height:42px; border-radius:11px; }
+.dept-icon .ico { width:21px; height:21px; stroke-width:1.8; }
+.dept-card .card-top { align-items:center; margin-bottom:16px; }
+/* Áreas próximas: translúcidas sobre el rojo */
+body.is-hub .dept-card.is-soon { background:rgb(255 242 226 / .06); border:1px solid rgb(255 242 226 / .22); box-shadow:none; backdrop-filter:blur(2px); transition:background .2s,border-color .2s; }
+body.is-hub .dept-card.is-soon:hover { background:rgb(255 242 226 / .09); border-color:rgb(255 242 226 / .3); }
+body.is-hub .dept-card.is-soon .dept-title { color:rgb(255 242 226 / .9); }
+body.is-hub .dept-card.is-soon .dept-desc { color:rgb(255 242 226 / .66); }
+body.is-hub .dept-card.is-soon .dept-icon { color:rgb(255 242 226 / .85); background:rgb(255 242 226 / .1); border:1px solid rgb(255 242 226 / .14); }
+body.is-hub .dept-card.is-soon .badge-soon { color:rgb(255 242 226 / .75); background:transparent; border:1px solid rgb(255 242 226 / .25); font-size:10px; letter-spacing:.1em; }
+/* Sales */
+body.is-hub .dept-card.active-pilot .dept-icon { color:var(--cream); background:var(--brick); box-shadow:0 4px 12px rgb(159 35 34 / .35); }
+body.is-hub .dept-card.active-pilot .card-footer { color:var(--brick); }
+@media(prefers-reduced-motion:reduce) { .dept-grid > li { animation:none; } }
+body.is-hub .hub { width:100%; }
+body.is-hub main.wrap { grid-template-columns:minmax(0,1fr); width:100%; }
