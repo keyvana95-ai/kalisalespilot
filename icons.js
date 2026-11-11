@@ -22,13 +22,14 @@ const iconPaths = {
   handshake:["m11 17 2 2a1 1 0 1 0 3-3","m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4","m21 3 1 11h-2","M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3","M3 4h8"],
   househeart:["M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z","M8.62 13.8A2.25 2.25 0 1 1 12 10.836a2.25 2.25 0 1 1 3.38 2.966l-2.626 2.856a.998.998 0 0 1-1.507 0z"],
   pencilruler:["M13 7 8.7 2.7a2.41 2.41 0 0 0-3.4 0L2.7 5.3a2.41 2.41 0 0 0 0 3.4L7 13","m8 6 2-2","m18 16 2-2","m17 11 4.3 4.3c.94.94.94 2.46 0 3.4l-2.6 2.6c-.94.94-2.46.94-3.4 0L11 17","M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z","m15 5 4 4"],
+  target:["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z","M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z","M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"],
   home:["m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z","M9 22V12h6v10"]
 };
 const ico = (name, cls = "") => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${(iconPaths[name] ?? []).map(d => `<path d="${d}"/>`).join("")}</svg>`;
 const riskIcon = { red:"alert", amber:"clock", green:"ok" };
 /* Iconos de la navegación principal. */
 for (const link of document.querySelectorAll(".masthead nav a")) {
-  const key = { "#jornada":"jornada", "#pipeline":"pipeline", "#pricing":"pricing", "#pisos":"pisos", "#co-livers":"users", "#check-in-out":"calendar" }[link.getAttribute("href")];
+  const key = { "#jornada":"jornada", "#objetivos":"target", "#pipeline":"pipeline", "#pricing":"pricing", "#pisos":"pisos", "#co-livers":"users", "#check-in-out":"calendar" }[link.getAttribute("href")];
   if (key) link.insertAdjacentHTML("afterbegin", ico(key));
 }
 const homeLink = document.querySelector(".btn-home");
