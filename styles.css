@@ -719,3 +719,10 @@ body.is-hub .dept-card.active-pilot .card-footer { color:var(--brick); }
 @media(prefers-reduced-motion:reduce) { .dept-grid > li { animation:none; } }
 body.is-hub .hub { width:100%; }
 body.is-hub main.wrap { grid-template-columns:minmax(0,1fr); width:100%; }
+
+/* ===== Color al pasar el cursor: rosa KALI muy suave ===== */
+:root { --hover:#fbece8; }
+.secondary:hover,.text-button:hover,.agenda-day:hover,a.case-row:hover,details.cycle-block:not([open]) > summary:hover,
+.floor-head:hover,a.whole-floor:hover .floor-head,a.occ-row:hover,.price-row:not(.price-head):hover,.crumb a:hover,
+.directory-list tbody tr:hover { background:var(--hover); }
+.agenda-day[aria-pressed="true"] { background:var(--hover); }
