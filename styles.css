@@ -867,3 +867,6 @@ body.presenting .report { font-size:17px; }
   .proc-row { grid-template-columns:1fr auto; } .proc-row > :first-child { grid-column:1 / -1; }
   .report-row { grid-template-columns:1fr auto; } .report-row > :last-child { grid-column:1 / -1; }
 }
+
+/* Logo de la cabecera algo más a la izquierda (solo en pantallas anchas) */
+@media(min-width:900px) { .masthead .brand { margin-left:-28px; } }
