@@ -227,7 +227,7 @@ function pisosListView() {
   const select = (key,label,options) => `<label>${label}<select data-pisos-filter="${key}"><option value="">Todos</option>${options.map(([value,text]) => `<option value="${safe(value)}" ${pisosFilter[key] === value ? "selected" : ""}>${safe(text)}</option>`).join("")}</select></label>`;
   return heading("Pisos","Características de cada piso y sus habitaciones, y referencias de mercado para fijar precios. Los datos los registra Real Estate; aquí se consultan en solo lectura.") +
     `<p class="proposal-tag"><span class="pending-tag">Sección propuesta · pendiente de aprobación de Lorenzo</span></p>
-    <div class="stack">${zoneRanking()}
+    <div class="stack">
     <section class="pisos-toolbar" aria-label="Filtros">${select("distrito","Distrito",[...distritos.map(item => [item,item]),["__none","Zona pendiente"]])}${select("mode","Modalidad",[["habitaciones","Por habitaciones"],["completo","Piso completo"]])}${select("orientation","Piso",[["Exterior","Exterior"],["Interior","Interior"]])}</section>
     <p class="directory-count muted">${list.length} ${list.length === 1 ? "piso" : "pisos"}</p>
     <div class="pisos-grid">${list.map(([name,record]) => {
@@ -261,7 +261,8 @@ function pisosListView() {
           <span class="go">Abrir ficha ${ico("right")}</span>
         </div>
       </a>`;
-    }).join("") || '<p class="empty">No hay pisos con esos filtros.</p>'}</div></div>`;
+    }).join("") || '<p class="empty">No hay pisos con esos filtros.</p>'}</div>
+    ${zoneRanking()}</div>`;
 }
 
 function pisoDetailView(slug) {
