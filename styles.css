@@ -726,3 +726,6 @@ body.is-hub main.wrap { grid-template-columns:minmax(0,1fr); width:100%; }
 .floor-head:hover,a.whole-floor:hover .floor-head,a.occ-row:hover,.price-row:not(.price-head):hover,.crumb a:hover,
 .directory-list tbody tr:hover { background:var(--hover); }
 .agenda-day[aria-pressed="true"] { background:var(--hover); }
+
+/* ===== Fondo: crema suave (opción A) ===== */
+:root { --ground:#f7ede1; --surface:#fffcf8; }
