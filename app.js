@@ -1,12 +1,12 @@
 "use strict";
 
-const storageKey = "kali-sales-pilot-v3";
+const storageKey = "kali-sales-pilot-v4";
 const demoDay = "2026-11-10";
 const channels = ["Idealista", "Portales asociados", "Grupos de Facebook", "Web de KALI"];
 const listingStatuses = ["Activo", "Pausado", "Retirado"];
 const candidateChannels = [...channels, "Contacto directo", "Otro"];
 const pendingPaymentsStage = "Pendiente de pagos";
-const internalSignatureStage = "Pendiente de firma interna";
+const reservedStage = "Reservada · contrato firmado";
 const candidateStages = ["Nuevo", "En conversación", pendingPaymentsStage, "Cerrado sin acuerdo"];
 const closedStage = "Cerrado sin acuerdo";
 const rooms = [
@@ -50,7 +50,7 @@ function seed() {
   return {
     "narciso-1": { opened:true, measure:"", next:null },
     "narciso-2": { opened:true, measure:"", next:null },
-    "narciso-3": { opened:true, measure:"", next:{ name:"Daniel Ejemplo", rent:740, deposit:740, entryFee:100, paid:"2026-11-08", entry:"2026-12-10", exit:"2027-06-10", signed:null, reference:null } },
+    "narciso-3": { opened:true, measure:"", next:{ name:"Daniel Ejemplo", rent:740, deposit:740, entryFee:100, paid:"2026-11-08", entry:"2026-12-10", exit:"2027-06-10", signed:"2026-11-08", reference:"DEMO-NARCISO-3", contractExit:"2027-06-10" } },
     "canillas-1": { opened:false, measure:"", next:null },
     "canillas-2": { opened:true, measure:"", next:null },
     "santa-engracia": { opened:true, measure:"", next:null }
@@ -103,7 +103,7 @@ const nextPayments = room => {
   return next ? stayPayments({ ...next,id:"next-" + room.id }) : {};
 };
 const nextPaymentStatus = room => commitmentPayments(nextPayments(room));
-const nextStage = room => state[room.id].next?.signed ? "Contrato firmado" : nextPaymentStatus(room).ready ? internalSignatureStage : pendingPaymentsStage;
+const nextStage = room => state[room.id].next?.signed ? reservedStage : pendingPaymentsStage;
 const missingPaymentLabel = room => "Falta comprobar: " + nextPaymentStatus(room).missing.map(key => key === "deposit" ? "depósito" : "Entry Fee").join(" y ");
 const activePrices = room => [...new Set(listingsFor(room).filter(item => item.status === "Activo").map(item => item.price))];
 const publishedPriceLabel = room => {
@@ -145,7 +145,7 @@ function pricingDetail(room, standalone = false) {
 
 function risk(room) {
   if (state[room.id].renewal?.status === "Renovación firmada") return ["green", "Sin riesgo · renovada"];
-  if (state[room.id].next?.signed) return ["green", "Sin riesgo · contrato firmado"];
+  if (state[room.id].next?.signed) return ["green", "Sin riesgo · reservada"];
   if (nextPaymentStatus(room).ready) return ["green", "Sin riesgo · pagos comprobados"];
   return dayDiff(demoDay, contractualExit(room)) <= 45 ? ["red", "Riesgo de vacío"] : ["amber", "Seguimiento comercial"];
 }
@@ -208,7 +208,7 @@ const nextDisplayName = room => {
 };
 const directoryToken = value => value.toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 const initials = name => String(name).split(/\s+/).filter(Boolean).slice(0,2).map(word => word[0].toUpperCase()).join("");
-const stayBadge = status => `<span class="stay-status ${({ Actual:"current", "Próxima":"next", Anterior:"past" })[status] ?? "past"}">${status}</span>`;
+const stayBadge = status => `<span class="stay-status ${({ Actual:"current", "Próxima":"next", Anterior:"past", Anulada:"cancelled" })[status] ?? "past"}">${status}</span>`;
 
 function directoryProfiles() {
   const records = registry();
@@ -230,6 +230,13 @@ function directoryProfiles() {
     const next = cycle.next;
     if (next) add(nextPersonKey(next,room),next.name,{ ...next,...records.stays[nextId],id:nextId,link:"next",floor,number,roomId:room.id,status:"Próxima",contract:next.signed ? "Firmado" : "Firma pendiente" },
       !next.candidateId && personKey(next.name) ? people[next.name] : []);
+    for (const [index,item] of (cycle.history ?? []).entries()) {
+      if (!item.personKey) continue;
+      const id = `cancel-${room.id}-${index}`;
+      add(item.personKey,item.name,{ floor,number,roomId:room.id,id,entry:item.entry,exit:item.exit,rent:item.rent,paid:item.paid,signed:item.signed,reference:item.reference,
+        deposit:item.payments?.deposit?.amount,entryFee:item.payments?.entryFee?.amount,returned:item.depositOutcome === "Devuelto",depositOutcome:item.depositOutcome,
+        cancelledOn:item.cancelledOn,status:"Anulada",contract:"Anulado",...records.stays[id] },personKey(item.name) ? people[item.name] : []);
+    }
   }
   for (const [index,stay] of previousStays.entries()) {
     const id = "past-" + index;
@@ -241,7 +248,7 @@ function directoryProfiles() {
     const person = profiles.get(stay.personKey);
     if (id.startsWith("stay-") && person) person.stays.push({ ...stay,id });
   }
-  const order = { Actual:0, "Próxima":1, Anterior:2 };
+  const order = { Actual:0, "Próxima":1, Anterior:2, Anulada:3 };
   for (const person of profiles.values()) person.stays.sort((first,second) => order[first.status] - order[second.status] || second.entry.localeCompare(first.entry));
   return profiles;
 }
@@ -249,7 +256,7 @@ function directoryProfiles() {
 function agendaEvents() {
   return [...directoryProfiles().values()].flatMap(person => person.stays.flatMap(stay => [
     { type:"in", day:stay.entry, person, stay },{ type:"out", day:stay.exit, person, stay }
-  ])).filter(event => event.day).sort((first,second) => first.day.localeCompare(second.day));
+  ])).filter(event => event.day && event.stay.status !== "Anulada").sort((first,second) => first.day.localeCompare(second.day));
 }
 
 function agendaView() {
@@ -313,7 +320,7 @@ function renderDirectoryRows() {
   const query = directoryToken(directoryFilter.query.trim());
   const visible = [...directoryProfiles().values()].filter(person => {
     const stay = person.stays[0];
-    return (directoryFilter.scope === "all" || (directoryFilter.scope === "old") === (stay?.status === "Anterior")) &&
+    return (directoryFilter.scope === "all" || (directoryFilter.scope === "old") === ["Anterior","Anulada"].includes(stay?.status)) &&
       directoryToken(stay ? `${person.name} ${stay.floor} habitación ${stay.number}` : person.name).includes(query);
   });
   document.querySelector("#resident-count").textContent = visible.length + (visible.length === 1 ? " residente" : " residentes");
@@ -370,24 +377,25 @@ function showResident(key,trigger) {
       const contract = latestContract(stay);
       const payments = stayPayments(stay);
       const rent = contract?.rent ?? stay.rent;
-      const deposit = payments.refund?.status === "Comprobado" && payments.refund.amount === payments.deposit?.amount
+      const deposit = stay.depositOutcome === "Retenido" && payments.deposit ? money.format(payments.deposit.amount) + " · Retenido"
+        : payments.refund?.status === "Comprobado" && payments.refund.amount === payments.deposit?.amount
         ? paymentText(payments.refund,"Devuelto") : paymentText(payments.deposit,"Pagado");
       return `<article class="resident-stay">
       <p><strong>${safe(stay.floor)} · ${unitLabel(stay.number)}</strong> ${stayBadge(stay.status)}</p>
       ${fields([["Check-in",date(stay.entry,true)],["Check-out",date(stay.exit,true)],["Renta",rent == null ? null : money.format(rent) + " / mes"],["Depósito",deposit],
-        ["Contrato",stay.link === "next" && !stay.signed ? commitmentPayments(payments).ready ? internalSignatureStage : pendingPaymentsStage : contract?.status ?? stay.contract ?? "Sin registrar"],
+        ["Contrato",stay.status === "Anulada" ? "Reserva anulada" : stay.link === "next" && !stay.signed ? pendingPaymentsStage : contract?.status ?? stay.contract ?? "Sin registrar"],
         ...(contract?.end && contract.end !== stay.exit ? [["Fin contractual",date(contract.end,true)]] : [])])}
-      ${editable ? recordButton("stay","Editar estancia",key,stay.id) : ""}
+      ${editable && stay.status !== "Anulada" ? recordButton("stay","Editar estancia",key,stay.id) : ""}
       ${residentCycleLinks(stay,editable,key)}
       <details class="registry-group"><summary>Contratos${stayContracts(stay).length ? " · " + stayContracts(stay).length : ""}</summary>
         ${stayContracts(stay).map(item => `<div class="registry-record">${fields([["Referencia",item.reference || null],["Estado",item.status],["Fecha de firma",item.signedOn ? date(item.signedOn,true) : null],["Inicio contractual",date(item.start,true)],["Fin contractual",date(item.end,true)],["Duración (meses)",item.months],["Renta",money.format(item.rent) + " / mes"],["Condiciones o notas",item.terms || null]])}${editable ? recordButton("contract","Editar contrato",key,stay.id,item.id) : ""}</div>`).join("")}
-        ${editable ? recordButton("contract","Añadir contrato",key,stay.id) : ""}
+        ${editable && stay.status !== "Anulada" ? recordButton("contract","Añadir contrato",key,stay.id) : ""}
       </details>
       <details class="registry-group"><summary>Importes y comprobaciones</summary>
         ${paymentFields.map(([name,label]) => {
           const payment = payments[name];
           return `<div class="registry-record"><h4>${label}</h4>${fields([["Importe y estado",paymentText(payment,name === "refund" ? "Devuelto" : "Pagado")],["Fecha de comprobación",payment?.on ? date(payment.on,true) : null],["Referencia del comprobante",payment?.proof || null]])}</div>`;
-        }).join("")}${editable ? recordButton("payments","Editar importes",key,stay.id) : ""}
+        }).join("")}${editable && stay.status !== "Anulada" ? recordButton("payments","Editar importes",key,stay.id) : ""}
       </details>
       <details class="registry-group"><summary>Seguimiento y notas</summary>${fields(followUpFields.map(([name,label]) => [label,stay[name] || null]))}</details>
     </article>`;
@@ -454,17 +462,23 @@ function formFor(type, room, trigger) {
     show("Registrar medida",locationName(room),`<form data-form="measure" data-room="${room.id}"><label>Medida tomada<textarea name="note" required maxlength="300" rows="3"></textarea></label><button type="submit">Guardar medida</button></form>`,trigger);
   } else if (type === "deposit" && !next && cycle.opened) {
     const pending = candidatesFor(room).filter(candidate => candidate.stage === pendingPaymentsStage);
-    show("Registrar depósito y Entry Fee",locationName(room),`<p>Registra ambos cobros de prueba. Al confirmarlos, la unidad queda comprometida y KALI puede firmar internamente.</p>
+    const price = activePrices(room).length === 1 ? activePrices(room)[0] : activePrices(room).length > 1 ? "" : targetPrice(room) ?? room.rent;
+    show("Registrar pago y firma",locationName(room),`<p>El candidato paga el depósito y el Entry Fee a la vez. Al recibir el pago, KALI firma el contrato electrónicamente y ${unitWord(room)} queda reservada.</p>
       <form data-form="deposit" data-room="${room.id}">
         <label>Candidato<select name="candidate" required>${pending.map(item => `<option value="${safe(item.id)}">${safe(item.name)}</option>`).join("")}<option value="demo">Andrea Ejemplo (simulación)</option></select></label>
-        <div class="fields"><label>Depósito pagado (€)<input name="deposit" type="number" min=".01" step=".01" value="${room.target ?? room.rent}" required></label><label>Entry Fee pagado (€)<input name="entryFee" type="number" min=".01" step=".01" required></label><label>Renta mensual (€)<input name="rent" type="number" min="1" step=".01" value="${activePrices(room).length === 1 ? activePrices(room)[0] : activePrices(room).length > 1 ? "" : targetPrice(room) ?? room.rent}" required></label><label>Check-in previsto<input name="entry" type="date" min="${room.ready ?? room.exit}" value="${room.ready ?? ""}" required></label><label>Check-out previsto<input name="exit" type="date" required></label></div><button type="submit">Confirmar ambos pagos de prueba</button></form>`,trigger);
-  } else if (type === "payment-check" && next && !next.signed && !nextPaymentStatus(room).ready) {
-    pendingResident = nextPersonKey(next,room);
-    location.hash = "co-livers";
-  } else if (type === "signature" && next && !next.signed && nextPaymentStatus(room).ready) {
-    const payments = nextPayments(room);
-    show("Registrar firma interna",locationName(room),`${fields([["Inquilino",nextDisplayName(room)],["Depósito",paymentText(payments.deposit,"Pagado")],["Entry Fee",paymentText(payments.entryFee,"Pagado")],["Check-in",date(next.entry,true)]])}
-      <form data-form="signature" data-room="${room.id}"><label>Referencia del contrato<input name="reference" required maxlength="48" value="DEMO-${room.id.toUpperCase()}"></label><p class="muted">Registra la firma de los documentos por KALI. La referencia queda vinculada a la estancia en Base Datos Co-livers.</p><button type="submit">Guardar firma interna</button></form>`,trigger);
+        <fieldset class="registry-payment"><legend>Pago</legend><div class="fields">
+          <label>Depósito (€)<input name="deposit" type="number" min=".01" step=".01" value="${room.target ?? room.rent}" required></label>
+          <label>Entry Fee (€)<input name="entryFee" type="number" min=".01" step=".01" required></label>
+          <label>Fecha del pago<input name="paid" type="date" value="${demoDay}" max="${demoDay}" required></label>
+        </div></fieldset>
+        <fieldset class="registry-payment"><legend>Estancia</legend><div class="fields">
+          <label>Renta mensual (€)<input name="rent" type="number" min="1" step=".01" value="${price}" required></label>
+          <label>Check-in previsto<input name="entry" type="date" min="${room.ready ?? room.exit}" value="${room.ready ?? ""}" required></label>
+          <label>Check-out previsto<input name="exit" type="date" required></label>
+        </div></fieldset>
+        <label>Referencia del contrato electrónico<input name="reference" required maxlength="48" value="DEMO-${room.id.toUpperCase()}"></label>
+        <p class="muted">Firma electrónica en el momento del pago (Lorenzo, 11-11-2026). Pendiente de confirmar si firma también el inquilino.</p>
+        <button type="submit">Registrar pago y firma de prueba</button></form>`,trigger);
   }
 }
 
@@ -580,7 +594,7 @@ dialogBody.addEventListener("submit", event => {
     if (!values.note.trim()) return invalid(form.elements.note,"Escribe la medida tomada.");
     cycle.measure = values.note.trim();
     cycle.measures = [...measuresFor(rooms.find(item => item.id === form.dataset.room)), { on:demoDay, note:cycle.measure }];
-    message = "Medida registrada. El riesgo sigue visible hasta comprobar el depósito y el Entry Fee.";
+    message = "Medida registrada. El riesgo sigue visible hasta registrar el pago y la firma.";
   } else if (form.dataset.form === "deposit") {
     if (cycle.next || !cycle.opened) return;
     if (values.exit <= values.entry) return invalid(form.elements.exit,"El check-out debe ser posterior al check-in.");
@@ -588,32 +602,15 @@ dialogBody.addEventListener("submit", event => {
     if (conflictingStay(room.id,values.entry,values.exit)) return invalid(form.elements.exit,"La habitación ya tiene otra estancia en esas fechas.");
     const candidate = candidatesFor(room).find(item => item.id === values.candidate && item.stage === pendingPaymentsStage);
     if (values.candidate !== "demo" && !candidate) return invalid(form.elements.candidate,"Selecciona un candidato pendiente de pagos.");
-    cycle.next = { name:candidate?.name ?? "Andrea Ejemplo", candidateId:candidate?.id ?? null, rent:Number(values.rent), deposit:Number(values.deposit), entryFee:Number(values.entryFee), paid:demoDay, entry:values.entry, exit:values.exit, signed:null, reference:null };
-    message = "Depósito y Entry Fee comprobados. Unidad comprometida y pendiente de firma interna.";
-  } else if (["renewalOffer","renewalResponse","renewalSign","closeNoSign"].includes(form.dataset.form)) {
+    if (!values.reference.trim()) return invalid(form.elements.reference,"Escribe la referencia del contrato.");
+    cycle.next = { name:candidate?.name ?? "Andrea Ejemplo", candidateId:candidate?.id ?? null, rent:Number(values.rent), deposit:Number(values.deposit), entryFee:Number(values.entryFee),
+      paid:values.paid, entry:values.entry, exit:values.exit, signed:values.paid, reference:values.reference.trim(), contractExit:values.exit };
+    const renewal = renewalFor(room);
+    if (["Sin oferta","Oferta enviada"].includes(renewal.status) && room.resident) cycle.renewal = { ...renewal, status:"Sin efecto", lostOn:values.paid };
+    message = `Pago y firma registrados. ${isWholeFloor(room) ? "El piso queda reservado" : "La habitación queda reservada"} y la estancia está en Base Datos Co-livers.`;
+  } else if (["renewalOffer","renewalResponse","renewalSign","cancelReservation"].includes(form.dataset.form)) {
     message = cycleSubmit(form,values,cycle);
     if (!message) return;
-  } else if (form.dataset.form === "signature") {
-    if (!cycle.next || cycle.next.signed) return;
-    const room = rooms.find(item => item.id === form.dataset.room);
-    if (!nextPaymentStatus(room).ready) return invalid(form.elements.reference,"Comprueba el depósito y el Entry Fee antes de registrar la firma interna.");
-    if (!values.reference.trim()) return invalid(form.elements.reference,"Escribe la referencia del contrato.");
-    cycle.next.signed = demoDay;
-    cycle.next.reference = values.reference.trim();
-    cycle.next.contractExit = cycle.next.exit;
-    const contracts = registry().contracts["next-" + form.dataset.room];
-    if (contracts) {
-      const draft = contracts.find(item => item.reference === cycle.next.reference && item.status === "Pendiente de firma");
-      if (draft) {
-        draft.signedOn = demoDay;
-        draft.status = "Firmado";
-        Object.assign(cycle.next,{ contractExit:draft.end,rent:draft.rent });
-      } else {
-        contracts.push({ id:"contract-" + crypto.randomUUID(),reference:cycle.next.reference,status:"Firmado",signedOn:demoDay,
-          start:cycle.next.entry,end:cycle.next.exit,rent:cycle.next.rent });
-      }
-    }
-    message = "Firma interna registrada en la ficha de la estancia.";
   } else return;
   const persisted = save();
   dialog.close();

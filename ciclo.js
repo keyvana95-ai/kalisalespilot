@@ -30,7 +30,7 @@ const cycleBlocks = { comercializacion:"Comercialización", candidaturas:"Candid
 const renewalSeed = {
   "narciso-1": { status:"Rechazada", price:730, sentOn:"2026-10-20", respondedOn:"2026-10-24" },
   "narciso-2": { status:"Oferta enviada", price:750, sentOn:"2026-11-06" },
-  "narciso-3": { status:"En espera", price:740, sentOn:"2026-10-15", requestedOn:"2026-11-09" },
+  "narciso-3": { status:"Sin efecto", price:740, sentOn:"2026-10-15", lostOn:"2026-11-08" },
   "canillas-1": { status:"Sin oferta" },
   "canillas-2": { status:"Oferta enviada", price:710, sentOn:"2026-11-04" }
 };
@@ -56,8 +56,8 @@ function cycleStage(room) {
   const renewal = renewalFor(room);
   if (!cycle.opened) return "Aviso T−60";
   if (renewal.status === "Renovación firmada") return "Renovada";
-  if (cycle.next?.signed) return "Contrato firmado";
-  if (cycle.next) return nextPaymentStatus(room).ready ? "Comprometida · firma interna pendiente" : pendingPaymentsStage;
+  if (cycle.next?.signed) return reservedStage;
+  if (cycle.next) return pendingPaymentsStage;
   if (renewal.status === "Aceptada") return "Renovación aceptada";
   if (candidatesFor(room).some(item => item.stage === pendingPaymentsStage)) return pendingPaymentsStage;
   if (activePrices(room).length) return "En comercialización";
@@ -72,17 +72,14 @@ function primaryStep(room) {
   const days = dayDiff(demoDay, contractualExit(room));
   if (!cycle.opened) return { type:"open", label:"Abrir ciclo", block:"", why:`El fin contractual llega a ${days} días. Abre el ciclo para empezar el pricing y la comercialización.` };
   if (renewal.status === "Renovación firmada" || cycle.next?.signed) return null;
-  if (cycle.next) {
-    if (!nextPaymentStatus(room).ready) return { type:"payment-check", label:"Revisar pagos", block:"cierre", why:missingPaymentLabel(room) + ". Comprueba ambos pagos en Base Datos Co-livers." };
-    return { type:"signature", label:"Registrar firma interna", block:"cierre", why:"Depósito y Entry Fee comprobados. KALI firma los documentos internamente." };
-  }
+  if (cycle.next) return null;
   if (renewal.status === "Aceptada") return { type:"renewalSign", label:"Registrar firma de renovación", block:"candidaturas", why:"El residente aceptó la renovación. El check-out solo cambia al firmar.", decision:true };
   if (risk(room)[0] === "red" && !measuresFor(room).length) return { type:"measure", label:"Registrar medida", block:"comercializacion", why:`Quedan ${days} días para el check-out y el compromiso sigue pendiente. Registra qué medida tomas: precio, publicación o leads.` };
   if (!targetPrice(room)) return { type:"pricing", label:"Fijar precio objetivo", block:"comercializacion", why:`Sin precio objetivo no se puede ofrecer la renovación ni publicar ${unitWord(room)}.` };
   if (renewal.status === "Sin oferta") return { type:"renewalOffer", label:"Registrar oferta de renovación", block:"candidaturas", why:"La vía interna empieza con la oferta al residente actual. El plazo de respuesta corre desde el envío." };
   if (!activePrices(room).length) return { type:"publication", label:"Registrar anuncio", block:"comercializacion", why:"La vía externa sigue en paralelo: publica en los canales y registra cada anuncio." };
   const pending = candidatesFor(room).find(item => item.stage === pendingPaymentsStage);
-  if (pending) return { type:"deposit", label:"Registrar depósito y Entry Fee", block:"cierre", why:`${pending.name} está pendiente de pagos. Comprobar ambos compromete ${unitWord(room)}.` };
+  if (pending) return { type:"deposit", label:"Registrar pago y firma", block:"cierre", why:`${pending.name} está pendiente de pagos. Al recibir el depósito y el Entry Fee, KALI firma el contrato electrónicamente y ${unitWord(room)} queda reservada.` };
   return { type:"candidate", label:"Añadir candidato", block:"candidaturas", why:`${isWholeFloor(room) ? "El piso está publicado" : "La habitación está publicada"}. Registra a cada interesado con su canal y próxima acción.` };
 }
 
@@ -102,7 +99,7 @@ function openBlocks(room, step, target) {
   const renewal = renewalFor(room);
   let open;
   if (cycle.next?.signed || renewal.status === "Renovación firmada") open = ["cierre"];
-  else if (cycle.next) open = renewal.status === "En espera" ? ["candidaturas","cierre"] : ["cierre"];
+  else if (cycle.next) open = ["cierre"];
   else open = ["comercializacion","candidaturas"];
   if (step?.block) open.push(step.block);
   if (target) open.push(target);
@@ -121,15 +118,15 @@ function blockSummary(room, id) {
   }
   if (id === "candidaturas") {
     const active = candidatesFor(room).filter(item => item.stage !== closedStage && item.id !== cycle.next?.candidateId).length;
-    const committed = cycle.next?.signed || nextPaymentStatus(room).ready;
-    const affected = committed && ["Sin oferta","Oferta enviada","En espera"].includes(renewal.status);
-    const status = affected ? cycle.next.signed ? "Sin efecto" : "En espera" : renewal.status;
+    const affected = Boolean(cycle.next?.signed) && ["Sin oferta","Oferta enviada"].includes(renewal.status);
+    const status = affected ? "Sin efecto" : renewal.status;
     return `Renovación: ${status} · ${active} ${active === 1 ? "candidato activo" : "candidatos activos"}`;
   }
-  if (cycle.next?.signed) return `Firmado · ${cycle.next.reference}`;
-  if (cycle.next) return `${nextDisplayName(room)} · ${nextPaymentStatus(room).ready ? "Depósito y Entry Fee comprobados" : missingPaymentLabel(room)}`;
+  if (cycle.next?.signed) return `Reservada · contrato ${cycle.next.reference}`;
+  if (cycle.next) return `${nextDisplayName(room)} · ${pendingPaymentsStage}`;
   if (renewal.status === "Renovación firmada") return "Renovación firmada · " + date(renewal.newExit,true);
-  return "Sin compromiso" + (historyFor(room).length ? " · " + historyFor(room).length + " cerrado sin firma" : "");
+  const cancelled = historyFor(room).length;
+  return "Sin reserva" + (cancelled ? ` · ${cancelled} ${cancelled === 1 ? "reserva anulada" : "reservas anuladas"}` : "");
 }
 
 function blockPanel(room, id, number, content, target, open) {
@@ -169,29 +166,30 @@ function commercialBlock(room, step) {
 function renewalPanel(room, step) {
   const cycle = state[room.id];
   const renewal = renewalFor(room);
-  const committed = cycle.next?.signed || nextPaymentStatus(room).ready;
-  const affected = committed && ["Sin oferta","Oferta enviada","En espera"].includes(renewal.status);
-  const status = affected ? cycle.next.signed ? "Sin efecto" : "En espera" : renewal.status;
+  const committed = Boolean(cycle.next?.signed);
+  const affected = committed && ["Sin oferta","Oferta enviada"].includes(renewal.status);
+  const status = affected ? "Sin efecto" : renewal.status;
   const rows = [["Estado",status]];
   if (renewal.price) rows.push(["Precio ofrecido",money.format(renewal.price) + " / mes"]);
   if (renewal.sentOn) rows.push(["Enviada",date(renewal.sentOn)]);
-  if (renewal.sentOn && renewal.status === "Oferta enviada" && !affected) rows.push(["Vence",date(addDays(renewal.sentOn,pendingTerm))]);
+  if (renewal.sentOn && status === "Oferta enviada") rows.push(["Vence",date(addDays(renewal.sentOn,pendingTerm))]);
   if (renewal.respondedOn) rows.push(["Respuesta",date(renewal.respondedOn)]);
+  if (renewal.lostOn) rows.push(["Sin efecto desde",date(renewal.lostOn)]);
   if (renewal.signedOn) rows.push(["Firmada",date(renewal.signedOn)],["Nuevo check-out",date(renewal.newExit)]);
-  const waiting = renewal.status === "En espera" && committed && !cycle.next.signed ? `<div class="callout waiting"><div><strong>Solicitud en espera</strong>
-    <small>El residente pidió renovar después del compromiso de ${safe(nextDisplayName(room))}. Si KALI registra la firma interna, la renovación queda sin efecto. Si se cierra sin firma, recupera la opción de renovar a ${money.format(renewal.price)}.</small></div></div>` : "";
-  const lost = !affected || waiting ? "" : cycle.next.signed ? `<p class="note">KALI registró la firma interna de la nueva estancia. La renovación queda sin efecto y el residente mantiene su check-out contractual (${date(contractualExit(room),true)}).</p>` : `<p class="note">El candidato externo ya pagó el depósito y el Entry Fee. La renovación queda en espera de la firma interna.</p>`;
-  const recovered = renewal.recovered && renewal.status === "Aceptada" ? `<p class="note">Opción recuperada al cerrar sin firma el compromiso externo.</p>` : "";
+  const lost = status !== "Sin efecto" ? "" : committed
+    ? `<p class="note">${safe(nextDisplayName(room))} pagó el depósito y el Entry Fee y KALI firmó su contrato. La renovación queda sin efecto y el residente sale en su check-out contractual (${date(contractualExit(room),true)}).</p>`
+    : `<p class="note">La reserva externa se anuló. Si quieres volver a ofrecer la renovación al residente, registra una nueva oferta.</p>`;
   const accepted = renewal.status === "Aceptada" ? `<p class="note decision">Decisión abierta (Lorenzo): qué estado toma ${unitWord(room)} mientras el residente no firme. Por ahora se sigue comercializando y el semáforo no pasa a verde.</p>` : "";
   const button = committed ? ""
     : renewal.status === "Sin oferta" && targetPrice(room) ? secondary(room,"renewalOffer","Registrar oferta",step)
+    : renewal.status === "Sin efecto" && targetPrice(room) ? secondary(room,"renewalOffer","Registrar nueva oferta",step)
     : renewal.status === "Oferta enviada" ? secondary(room,"renewalResponse","Registrar respuesta",step)
     : renewal.status === "Aceptada" ? secondary(room,"renewalSign","Registrar firma de renovación",step) : "";
   return `<div class="block-col"><h3>Renovación · ${safe(room.resident)}</h3>
     ${fields(rows)}
-    ${renewal.status === "Oferta enviada" && !affected ? `<p class="note">Plazo de respuesta: ${pendingTerm} días desde el envío. ${pendingDecision}</p>` : ""}
-    ${waiting}${lost}${recovered}${accepted}
-    <p class="rule">El candidato externo compromete la unidad cuando Sales comprueba el depósito y el Entry Fee.</p>
+    ${status === "Oferta enviada" ? `<p class="note">Plazo de respuesta: ${pendingTerm} días desde el envío. ${pendingDecision}</p>` : ""}
+    ${lost}${accepted}
+    <p class="rule">Gana quien confirma primero: si un candidato externo paga el depósito y el Entry Fee, KALI firma su contrato en ese momento y la renovación queda sin efecto.</p>
     ${button}</div>`;
 }
 
@@ -222,37 +220,35 @@ function closingBlock(room, step) {
   let body;
   if (next) {
     const payments = nextPayments(room);
-    const ready = nextPaymentStatus(room).ready;
     body = `<div class="block-grid two">
-      <div class="block-col"><h3>Pagos del compromiso</h3>${fields([["Candidato",nextDisplayName(room)],["Depósito",paymentText(payments.deposit,"Pagado")],["Entry Fee",paymentText(payments.entryFee,"Pagado")],["Check-in previsto",date(next.entry)],["Check-out previsto",date(next.exit)]])}
-        ${!next.signed && !ready ? `<p class="note">${missingPaymentLabel(room)}.</p>` : ""}</div>
-      <div class="block-col"><h3>Firma interna</h3>${next.signed ? fields([["Referencia",next.reference],["Fecha de firma",date(next.signed)]]) + '<p class="note">Ciclo cerrado. La estancia queda en Base Datos Co-livers.</p>' : `<p class="muted">${ready ? "KALI firma internamente los documentos." : "Disponible cuando Sales compruebe ambos pagos."}</p>`}
+      <div class="block-col"><h3>Pago</h3>${fields([["Inquilino",nextDisplayName(room)],["Depósito",paymentText(payments.deposit,"Pagado")],["Entry Fee",paymentText(payments.entryFee,"Pagado")],["Fecha del pago",date(next.paid,true)],["Check-in",date(next.entry,true)],["Check-out",date(next.exit,true)]])}</div>
+      <div class="block-col"><h3>Contrato electrónico</h3>${next.signed ? fields([["Referencia",next.reference],["Firmado",date(next.signed,true)],["Traspaso a Community","Pendiente de Community"]]) + `<p class="note">${isWholeFloor(room) ? "Piso reservado" : "Habitación reservada"}. Ciclo cerrado; el traspaso se registrará cuando exista el módulo de Community.</p>` : `<p class="note">${pendingPaymentsStage}.</p>`}
         <div class="button-row"><button type="button" class="action-link" data-resident="${safe(nextPersonKey(next,room))}">Abrir estancia del nuevo residente</button>
-        ${next.signed ? "" : secondary(room,"closeNoSign","Cerrar sin firma",step)}</div></div>
+        ${secondary(room,"cancelReservation","Anular reserva",step)}</div></div>
     </div>`;
   } else if (renewal.status === "Renovación firmada") {
     body = `<div class="block-col"><h3>Renovación firmada</h3>${fields([["Residente",room.resident],["Nuevo check-out",date(renewal.newExit,true)],["Renta",money.format(renewal.price) + " / mes"],["Referencia",renewal.reference]])}
       <p class="note">Ciclo cerrado por renovación. El check-out se actualizó al firmar.</p></div>`;
   } else {
     const pending = candidatesFor(room).find(item => item.stage === pendingPaymentsStage);
-    body = `<p class="muted empty-state">Sin compromiso. Registra el depósito y el Entry Fee del candidato.</p>
-      ${pending && cycle.opened ? secondary(room,"deposit","Registrar depósito y Entry Fee",step) : ""}`;
+    body = `<p class="muted empty-state">Sin reserva. Cuando el candidato pague el depósito y el Entry Fee, registra el pago y la firma del contrato.</p>
+      ${pending && cycle.opened ? secondary(room,"deposit","Registrar pago y firma",step) : ""}`;
   }
-  const past = history.length ? `<details class="registry-group"><summary>Historial del ciclo · ${history.length}</summary>
-    ${history.map(item => `<div class="registry-record">${fields([["Candidato",item.name],
-      ["Depósito",paymentText(item.payments?.deposit ?? (item.deposit == null ? null : { amount:item.deposit,status:"Comprobado" }),"Pagado")],
-      ["Entry Fee",paymentText(item.payments?.entryFee,"Pagado")],["Cerrado sin firma",date(item.closedOn)],["Motivo",item.reason]])}</div>`).join("")}</details>` : "";
+  const past = history.length ? `<details class="registry-group"><summary>Reservas anuladas · ${history.length}</summary>
+    ${history.map(item => `<div class="registry-record">${fields([["Inquilino",item.name],
+      ["Depósito",item.payments?.deposit?.amount == null ? "Sin registrar" : money.format(item.payments.deposit.amount) + " · " + (item.depositOutcome ?? "Pagado")],
+      ["Entry Fee",paymentText(item.payments?.entryFee,"Pagado")],["Contrato",item.reference ?? null],["Anulada",date(item.cancelledOn ?? item.closedOn)],["Motivo",item.reason]])}</div>`).join("")}</details>` : "";
   return body + past;
 }
 
-const cycleSteps = ["Aviso T−60","Precio","Comercialización","Pagos","Firma"];
+const cycleSteps = ["Aviso T−60","Precio","Comercialización","Pago y firma","Traspaso"];
 function stageIndex(room) {
   const cycle = state[room.id];
   const renewal = renewalFor(room);
   if (!cycle.opened) return 0;
-  if (renewal.status === "Renovación firmada" || cycle.next?.signed) return cycleSteps.length;
-  if (cycle.next) return nextPaymentStatus(room).ready ? 4 : 3;
-  if (renewal.status === "Aceptada") return 4;
+  if (renewal.status === "Renovación firmada") return cycleSteps.length;
+  if (cycle.next?.signed) return 4;
+  if (cycle.next || renewal.status === "Aceptada") return 3;
   if (candidatesFor(room).some(item => item.stage === pendingPaymentsStage)) return 3;
   if (activePrices(room).length || targetPrice(room)) return 2;
   return 1;
@@ -261,7 +257,7 @@ function stageTrack(room) {
   const current = stageIndex(room);
   return `<ol class="stage-track" aria-label="Etapas del ciclo comercial">${cycleSteps.map((label,index) => {
     const status = index < current ? "done" : index === current ? "current" : "todo";
-    return `<li class="${status}" ${status === "current" ? 'aria-current="step"' : ""}><span class="dot">${status === "done" ? ico("check") : index + 1}</span><span class="label">${label}</span></li>`;
+    return `<li class="${status}" ${status === "current" ? 'aria-current="step"' : ""}><span class="dot">${status === "done" ? ico("check") : index + 1}</span><span class="label">${label}${index === 4 && status !== "done" ? '<small class="stage-sub">Pendiente de Community</small>' : ""}</span></li>`;
   }).join("")}</ol>`;
 }
 
@@ -315,11 +311,11 @@ function jornadaView() {
   const order = { red:0, amber:1, green:2 };
   const items = rooms.map(room => ({ room, step:primaryStep(room), risk:risk(room) })).filter(item => item.step && item.step.type !== "candidate")
     .sort((first,second) => order[first.risk[0]] - order[second.risk[0]] || contractualExit(first.room).localeCompare(contractualExit(second.room)));
-  const urgent = items.filter(item => item.risk[0] === "red" || item.step.type === "signature");
+  const urgent = items.filter(item => item.risk[0] === "red" || item.step.type === "deposit");
   const today = items.filter(item => !urgent.includes(item));
   const reds = rooms.filter(room => risk(room)[0] === "red").length;
   const ambers = rooms.filter(room => risk(room)[0] === "amber").length;
-  const signatures = rooms.filter(room => primaryStep(room)?.type === "signature").length;
+  const pendingPayments = rooms.filter(room => state[room.id].opened && !state[room.id].next).reduce((sum,room) => sum + candidatesFor(room).filter(item => item.stage === pendingPaymentsStage).length,0);
   const limit = addDays(demoDay,30);
   const moves = agendaEvents().filter(event => event.day >= demoDay && event.day <= limit);
   const kpi = (value,label,hint,href,tone,icon) => `<a class="kpi ${tone}" href="${href}"><i class="kpi-ico">${ico(icon)}</i><strong>${value}</strong><span>${label}</span><small>${hint}</small></a>`;
@@ -335,9 +331,9 @@ function jornadaView() {
   const group = (title,list,tone,empty) => `<section class="case-group ${tone}" aria-label="${title}"><h2>${title}<span class="count">${list.length}</span></h2>${list.length ? list.map(card).join("") : `<p class="empty">${empty}</p>`}</section>`;
   return heading("Mi jornada","Lo que requiere atención hoy y los movimientos de los próximos 30 días.") + `
     <section class="kpi-strip" aria-label="Resumen del día">
-      ${kpi(reds,"En riesgo de vacío",`${45} días o menos sin pagos comprobados`,"#pipeline",reds ? "danger" : "","alert")}
+      ${kpi(reds,"En riesgo de vacío",`45 días o menos sin reserva`,"#pipeline",reds ? "danger" : "","alert")}
       ${kpi(ambers,"En seguimiento","Ciclos abiertos o con aviso a 60 días","#pipeline",ambers ? "warn" : "","clock")}
-      ${kpi(signatures,"Firmas internas pendientes","Depósito y Entry Fee ya comprobados","#pipeline",signatures ? "ok" : "","pen")}
+      ${kpi(pendingPayments,"Pagos pendientes","Candidatos que han aceptado y aún no han pagado","#pipeline",pendingPayments ? "ok" : "","pen")}
       ${kpi(moves.length,"Check-ins y check-outs","En los próximos 30 días","#check-in-out/pisos","","calendar")}
     </section>
     <div class="jornada-grid">
@@ -383,7 +379,7 @@ function pipelineView() {
     for (const room of list) counts[risk(room)[0]]++;
     const worst = list.reduce((min,room) => Math.min(min,riskOrder[risk(room)[0]]),2);
     const toDo = list.filter(room => primaryStep(room)).length;
-    const urgent = list.some(room => risk(room)[0] === "red" || (state[room.id].next && !state[room.id].next.signed));
+    const urgent = list.some(room => risk(room)[0] === "red" || primaryStep(room)?.type === "deposit");
     return { floor, list, counts, worst, toDo, urgent, firstExit:contractualExit(list[0]) };
   }).sort((first,second) => first.worst - second.worst || first.floor.name.localeCompare(second.floor.name,"es"));
   const units = floors.reduce((sum,item) => sum + item.list.length,0);
@@ -399,7 +395,7 @@ function pipelineView() {
   };
   const todo = n => n ? `<strong>${n}</strong> ${n === 1 ? "acción pendiente" : "acciones pendientes"}` : "Sin acciones pendientes";
   return heading("Pipeline comercial","Pisos con unidades en ciclo comercial o con aviso a 60 días. Abre un piso para ver sus habitaciones; un piso completo abre directamente su ficha.") +
-    `<p class="directory-count muted">${floors.length} pisos · ${units} ${units === 1 ? "unidad" : "unidades"} en seguimiento · Los pisos con riesgo de vacío o firma interna pendiente se abren solos</p><div class="stack">` +
+    `<p class="directory-count muted">${floors.length} pisos · ${units} ${units === 1 ? "unidad" : "unidades"} en seguimiento · Los pisos con riesgo de vacío o pagos pendientes se abren solos</p><div class="stack">` +
     floors.map(({floor,list,counts,toDo,urgent,firstExit}) => {
       if (floor.mode === "completo" && list.length === 1) {
         const room = list[0];
@@ -436,7 +432,7 @@ function cycleForm(type, room, trigger) {
       <form data-form="renewalOffer" data-room="${room.id}">
         <div class="fields"><label>Precio ofrecido (€ / mes)<input name="price" type="number" min="1" step=".01" value="${safe(targetPrice(room))}" required></label>
         <label>Fecha de envío<input name="sentOn" type="date" value="${demoDay}" required></label></div>
-        <p class="muted">Si un candidato externo completa el depósito y el Entry Fee, la unidad queda comprometida. Plazo de respuesta: ${pendingTerm} días (pendiente de Lorenzo).</p>
+        <p class="muted">Si un candidato externo paga el depósito y el Entry Fee antes, KALI firma su contrato y la renovación queda sin efecto. Plazo de respuesta: ${pendingTerm} días (pendiente de Lorenzo).</p>
         <button type="submit">Guardar oferta</button></form>`,trigger);
   } else if (type === "renewalResponse") {
     show("Registrar respuesta",locationName(room),`
@@ -452,14 +448,15 @@ function cycleForm(type, room, trigger) {
         <label>Referencia del contrato<input name="reference" maxlength="48" value="DEMO-REN-${room.id.toUpperCase()}" required></label></div>
         <p class="muted">Al firmar se actualiza el check-out en la estancia y el ciclo se cierra.</p>
         <button type="submit">Registrar firma de prueba</button></form>`,trigger);
-  } else if (type === "closeNoSign" && cycle.next && !cycle.next.signed) {
+  } else if (type === "cancelReservation" && cycle.next) {
     const payments = nextPayments(room);
-    show("Cerrar sin firma",locationName(room),`
-      ${fields([["Candidato",nextDisplayName(room)],["Depósito",paymentText(payments.deposit,"Pagado")],["Entry Fee",paymentText(payments.entryFee,"Pagado")]])}
-      <form data-form="closeNoSign" data-room="${room.id}">
-        <label>Motivo<textarea name="reason" rows="3" maxlength="300" required></textarea></label>
-        <p class="muted">Los pagos se conservan en el historial. ${isWholeFloor(room) ? "El piso vuelve" : "La habitación vuelve"} a comercializarse${renewal.status === "En espera" ? " y el residente recupera la opción de renovar" : ""}.</p>
-        <button type="submit">Cerrar sin firma</button></form>`,trigger);
+    show("Anular reserva",locationName(room),`
+      ${fields([["Inquilino",nextDisplayName(room)],["Depósito",paymentText(payments.deposit,"Pagado")],["Entry Fee",paymentText(payments.entryFee,"Pagado")],["Contrato",cycle.next.reference]])}
+      <form data-form="cancelReservation" data-room="${room.id}">
+        <label>Motivo<textarea name="reason" rows="3" maxlength="300" required placeholder="Pago devuelto, pago rechazado, desistimiento…"></textarea></label>
+        <label>Depósito<select name="outcome" required><option value="">Selecciona qué pasa con el depósito</option><option>Devuelto</option><option>Retenido</option></select></label>
+        <p class="muted">La estancia, los pagos y el contrato no se borran: quedan en Base Datos Co-livers como reserva anulada. ${isWholeFloor(room) ? "El piso vuelve" : "La habitación vuelve"} a comercializarse. La renovación del residente no se recupera sola.</p>
+        <button type="submit">Anular reserva</button></form>`,trigger);
   } else return false;
   return true;
 }
@@ -486,21 +483,28 @@ function cycleSubmit(form, values, cycle) {
     cycle.renewal = { ...renewal, status:"Renovación firmada", signedOn:demoDay, newExit:values.newExit, reference:values.reference.trim() };
     return "Renovación firmada. El check-out de la estancia se ha actualizado.";
   }
-  if (form.dataset.form === "closeNoSign") {
-    if (!cycle.next || cycle.next.signed) return;
+  if (form.dataset.form === "cancelReservation") {
+    if (!cycle.next) return;
     if (!values.reason.trim()) return invalid(form.elements.reason,"Indica el motivo.");
+    if (!["Devuelto","Retenido"].includes(values.outcome)) return invalid(form.elements.outcome,"Indica qué pasa con el depósito.");
     const next = cycle.next;
-    const records = registry();
+    const records = ensureRegistry();
     const stayId = "next-" + room.id;
-    cycle.history = [...historyFor(room), { name:nextDisplayName(room),payments:nextPayments(room),contracts:records.contracts[stayId] ?? [],
-      closedOn:demoDay,reason:values.reason.trim() }];
-    if (next.candidateId) cycle.candidates = candidatesFor(room).map(item => item.id === next.candidateId ? { ...item, stage:closedStage, nextAction:"", reason:"Sin firma: " + values.reason.trim() } : item);
+    const index = historyFor(room).length;
+    const archiveId = `cancel-${room.id}-${index}`;
+    const payments = { ...nextPayments(room) };
+    if (values.outcome === "Devuelto" && payments.deposit) payments.refund = { amount:payments.deposit.amount, status:"Comprobado", on:demoDay };
+    if (records.payments[stayId]) records.payments[archiveId] = records.payments[stayId];
+    if (records.stays[stayId]) records.stays[archiveId] = records.stays[stayId];
+    if (records.contracts[stayId]) records.contracts[archiveId] = records.contracts[stayId].map(item => ({ ...item, status:"Anulado" }));
     delete records.payments[stayId];
     delete records.stays[stayId];
     delete records.contracts[stayId];
+    cycle.history = [...historyFor(room), { name:nextDisplayName(room), personKey:nextPersonKey(next,room), payments, reference:next.reference, rent:next.rent,
+      entry:next.entry, exit:next.exit, paid:next.paid, signed:next.signed, cancelledOn:demoDay, reason:values.reason.trim(), depositOutcome:values.outcome }];
+    if (next.candidateId) cycle.candidates = candidatesFor(room).map(item => item.id === next.candidateId ? { ...item, stage:closedStage, nextAction:"", reason:"Reserva anulada: " + values.reason.trim() } : item);
     cycle.next = null;
-    if (renewal.status === "En espera") cycle.renewal = { ...renewal, status:"Aceptada", recovered:true };
-    return `Compromiso cerrado sin firma. ${isWholeFloor(room) ? "El piso vuelve" : "La habitación vuelve"} a comercializarse.`;
+    return `Reserva anulada. El depósito queda como ${values.outcome.toLowerCase()} y ${isWholeFloor(room) ? "el piso vuelve" : "la habitación vuelve"} a comercializarse.`;
   }
 }
 

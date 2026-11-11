@@ -139,7 +139,7 @@ function registryForm(trigger) {
 
 function conflictingStay(roomId,entry,exit,except = "") {
   return [...directoryProfiles().values()].some(person => person.stays.some(stay =>
-    stay.id !== except && stay.roomId === roomId && entry < stay.exit && stay.entry < exit));
+    stay.id !== except && stay.status !== "Anulada" && stay.roomId === roomId && entry < stay.exit && stay.entry < exit));
 }
 
 function saveRegistryForm(form,values) {
@@ -189,7 +189,7 @@ function saveRegistryForm(form,values) {
     if (stay.status === "Próxima" && ["Firmado","Vigente"].includes(values.status) &&
         !(stay.signed || contracts.some(item => item.signedOn && ["Firmado","Vigente"].includes(item.status))) &&
         !commitmentPayments(stayPayments(stay)).ready) {
-      return invalid(form.elements.status,"Comprueba el depósito y el Entry Fee antes de registrar la firma interna.");
+      return invalid(form.elements.status,"Registra el pago del depósito y del Entry Fee antes de marcar el contrato como firmado.");
     }
     if ((values.status === "Firmado" || (stay.link === "next" && values.status === "Vigente")) && !values.signedOn) return invalid(form.elements.signedOn,"Indica la fecha de firma.");
     const contract = { ...values,id:contractId || "contract-" + crypto.randomUUID(),reference:values.reference.trim(),terms:values.terms.trim(),

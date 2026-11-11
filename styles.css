@@ -870,3 +870,7 @@ body.presenting .report { font-size:17px; }
 
 /* Logo de la cabecera algo más a la izquierda (solo en pantallas anchas) */
 @media(min-width:900px) { .masthead .brand { margin-left:-28px; } }
+
+/* Regla de pago y firma (11-11-2026) */
+.stay-status.cancelled { background:var(--red-bg); color:var(--red); }
+.stage-sub { display:block; font-size:10.5px; font-weight:600; color:var(--muted); margin-top:2px; }

@@ -16,11 +16,11 @@ const objectiveCatalog = [
     recover:{ label:"Ver unidades en riesgo en Mi jornada", href:"#jornada" } },
   { id:"firmadas", group:"resultado", name:"Unidades firmadas antes del check-out", unit:"unidades", kind:"acc", better:"up", target:18, value:7, lastWeek:6,
     history:[14,17,15], months:[5,2,null], calc:"Firmas con fecha anterior al check-out del residente saliente, acumuladas en el trimestre.", source:"Pipeline (fecha de firma, check-out)",
-    cases:[{ text:"Narciso Serra 8 · Habitación 3", note:"Comprometida, falta la firma interna", href:"#ciclo/narciso-3" },{ text:"Santa Engracia 122", note:"Oferta de renovación por enviar · check-out 31 dic", href:"#ciclo/santa-engracia" }],
+    cases:[{ text:"Narciso Serra 8 · Habitación 3", note:"Reservada: pago y contrato firmados el 8 nov, antes del check-out", href:"#ciclo/narciso-3" },{ text:"Santa Engracia 122", note:"Oferta de renovación por enviar · check-out 31 dic", href:"#ciclo/santa-engracia" }],
     recover:{ label:"Ver firmas pendientes en Pipeline", href:"#pipeline" } },
   { id:"renovacion", group:"resultado", name:"Tasa de renovación", unit:"%", kind:"rate", better:"up", target:40, value:37, lastWeek:37,
     history:[31,35,38], months:[40,33,null], calc:"Renovaciones firmadas ÷ contratos que vencen en el trimestre.", source:"Base Datos Co-livers + solicitudes de residentes",
-    cases:[{ text:"Narciso Serra 8 · Habitación 3", note:"El residente pidió renovar después del compromiso externo", href:"#ciclo/narciso-3" },{ text:"Santa Engracia 122", note:"Oferta de renovación por registrar", href:"#ciclo/santa-engracia" }],
+    cases:[{ text:"Narciso Serra 8 · Habitación 3", note:"Renovación sin efecto: un candidato externo pagó y KALI firmó su contrato primero", href:"#ciclo/narciso-3" },{ text:"Santa Engracia 122", note:"Oferta de renovación por registrar", href:"#ciclo/santa-engracia" }],
     recover:{ label:"Ver ofertas de renovación en Mi jornada", href:"#jornada" } },
   { id:"incremento", group:"resultado", name:"Incremento de renta", unit:"%", kind:"rate", better:"up", target:4, value:4.6, lastWeek:4.4,
     history:[3.1,3.8,4.2], months:[4.9,4.1,null], calc:"(Precio de firma − precio anterior) ÷ precio anterior, media de las firmas del trimestre.", source:"Pricing",
@@ -171,7 +171,7 @@ function weekAhead() {
   const limit = addDays(demoDay,7);
   const radar = rooms.filter(room => { const t60 = addDays(contractualExit(room),-60); return t60 >= demoDay && t60 <= limit; });
   const moves = agendaEvents().filter(event => event.day >= demoDay && event.day <= addDays(demoDay,14));
-  const signs = rooms.filter(room => primaryStep(room)?.type === "signature");
+  const signs = rooms.filter(room => primaryStep(room)?.type === "deposit");
   return { radar, moves, signs };
 }
 
@@ -217,7 +217,7 @@ function reportView() {
       <div class="ahead">
         <div><h3>Salidas que llegan a 60 días</h3>${radar.length ? `<ul>${radar.map(room => `<li>${safe(locationName(room))} · aviso el ${date(addDays(contractualExit(room),-60))}</li>`).join("")}</ul>` : '<p class="muted">Ninguna en los próximos 7 días.</p>'}</div>
         <div><h3>Check-ins y check-outs (14 días)</h3>${moves.length ? `<ul>${moves.map(event => `<li>${date(event.day)} · ${event.type === "in" ? "Check-in" : "Check-out"} · ${safe(event.stay.floor)} · ${unitLabel(event.stay.number)} <small>(${safe(anon(event.person.name))})</small></li>`).join("")}</ul>` : '<p class="muted">Sin movimientos.</p>'}</div>
-        <div><h3>Firmas previstas</h3>${signs.length ? `<ul>${signs.map(room => `<li>${safe(locationName(room))} · firma interna pendiente</li>`).join("")}</ul>` : '<p class="muted">Ninguna.</p>'}</div>
+        <div><h3>Pagos pendientes</h3>${signs.length ? `<ul>${signs.map(room => `<li>${safe(locationName(room))} · al pagar, KALI firma y queda reservada</li>`).join("")}</ul>` : '<p class="muted">Ninguna.</p>'}</div>
       </div></section>
     <section class="report-block meeting"><h2><span class="n">7</span>Registro de la reunión</h2>
       <p class="muted">Lo que se acuerde hoy aparecerá en el apartado 5 del informe de la semana que viene.</p>
