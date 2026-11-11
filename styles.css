@@ -874,3 +874,22 @@ body.presenting .report { font-size:17px; }
 /* Regla de pago y firma (11-11-2026) */
 .stay-status.cancelled { background:var(--red-bg); color:var(--red); }
 .stage-sub { display:block; font-size:10.5px; font-weight:600; color:var(--muted); margin-top:2px; }
+
+/* Pricing agrupado por piso */
+.price-group { display:grid; grid-template-columns:minmax(220px,1.4fr) minmax(0,2fr) auto; gap:8px 18px; align-items:center; padding:14px 18px 12px; border-top:1px solid var(--line-strong, var(--line)); background:color-mix(in srgb,var(--salmon) 9%,var(--surface)); }
+.price-head + .price-group { border-top:0; }
+.pg-name { display:flex; align-items:center; gap:10px; min-width:0; }
+.pg-name strong { display:block; font:750 18px/1.2 var(--display); letter-spacing:-.01em; }
+.pg-name small { display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+.pg-ico { width:22px; height:22px; flex:none; color:var(--brick); }
+.pg-meta { font-size:13px; color:var(--muted); }
+.pg-meta b { font-weight:700; } .pg-meta .up { color:var(--green); } .pg-meta .down { color:var(--red); }
+.pg-link { justify-self:end; }
+.price-row.in-group > :first-child { padding-left:32px; position:relative; }
+.price-row.in-group > :first-child::before { content:""; position:absolute; left:11px; top:-13px; bottom:50%; width:12px; border-left:2px solid var(--line); border-bottom:2px solid var(--line); border-bottom-left-radius:6px; }
+@media(max-width:980px) {
+  .price-group { grid-template-columns:1fr; }
+  .pg-link { justify-self:start; }
+  .price-row.in-group > :first-child { padding-left:0; }
+  .price-row.in-group > :first-child::before { display:none; }
+}

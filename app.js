@@ -159,21 +159,40 @@ function pricingView() {
     const zone = record?.barrio ? zoneStats().find(item => item.barrio === record.barrio && item.distrito === record.distrito) : null;
     return { record, whole, m2, zone };
   };
-  const ordered = [...rooms].sort((first,second) => Number(Boolean(targetPrice(first))) - Number(Boolean(targetPrice(second))) || contractualExit(first).localeCompare(contractualExit(second)));
+  const byFloor = new Map();
+  for (const room of [...rooms].sort((first,second) => contractualExit(first).localeCompare(contractualExit(second)))) {
+    const name = catalogFloor(room.floor).name;
+    byFloor.set(name,[...(byFloor.get(name) ?? []),room]);
+  }
+  const groups = [...byFloor.entries()].sort(([nameA,listA],[nameB,listB]) =>
+    Number(listB.some(room => !targetPrice(room))) - Number(listA.some(room => !targetPrice(room))) || nameA.localeCompare(nameB,"es"));
   const withTarget = rooms.filter(room => targetPrice(room));
   const mismatched = rooms.filter(room => { const prices = activePrices(room); const target = targetPrice(room); return target && prices.length && prices.some(price => price !== target); });
   const avgRise = withTarget.length ? withTarget.reduce((sum,room) => sum + (targetPrice(room) - currentRent(room)) / currentRent(room),0) / withTarget.length : null;
   const kpi = (value,label,hint,tone = "",icon = "pricing") => `<div class="kpi ${tone}"><i class="kpi-ico">${ico(icon)}</i><strong>${value}</strong><span>${label}</span><small>${hint}</small></div>`;
-  return heading("Pricing","Precio de cada unidad en ciclo frente a su renta anterior y al mercado de su zona.") + `
+  return heading("Pricing","Precio de cada unidad en ciclo, agrupado por piso, frente a su renta anterior y al mercado de su zona.") + `
     <section class="kpi-strip" aria-label="Resumen de pricing">
       ${kpi(rooms.length - withTarget.length,"Sin precio objetivo","Fíjalo antes de ofrecer la renovación o publicar",rooms.length - withTarget.length ? "warn" : "","pricing")}
       ${kpi(mismatched.length,"Publicado distinto del objetivo","Revisa el anuncio o el objetivo",mismatched.length ? "warn" : "","alert")}
       ${kpi(avgRise == null ? "—" : pct.format(avgRise),"Subida media del objetivo","Frente a la renta anterior","","trend")}
     </section>
-    <section class="panel price-panel" aria-label="Precios por unidad">
+    <section class="panel price-panel" aria-label="Precios por piso y unidad">
       <div class="price-table" role="table">
         <div class="price-row price-head" role="row"><span role="columnheader">Unidad</span><span role="columnheader">Renta anterior</span><span role="columnheader">Precio objetivo</span><span role="columnheader">Publicado</span><span role="columnheader">€/m² · mercado de la zona</span><span role="columnheader">Etapa</span><span role="columnheader"></span></div>
-        ${ordered.map(room => {
+        ${groups.map(([name,list]) => {
+          const record = typeof realEstateRecords !== "undefined" ? realEstateRecords[name] : null;
+          const whole = list.length === 1 && isWholeFloor(list[0]);
+          const targets = list.filter(room => targetPrice(room));
+          const rise = targets.length ? targets.reduce((sum,room) => sum + (targetPrice(room) - currentRent(room)) / currentRent(room),0) / targets.length : null;
+          const missing = list.length - targets.length;
+          const meta = [whole ? "Piso completo" : `${list.length} ${list.length === 1 ? "unidad" : "unidades"} en ciclo`,
+            rise == null ? "" : `Subida media del objetivo <b class="${rise >= 0 ? "up" : "down"}">${pct.format(rise)}</b>`,
+            missing ? `<b class="warn-text">${missing} sin precio objetivo</b>` : ""].filter(Boolean).join(" · ");
+          return `<div class="price-group" role="row">
+            <span role="cell" class="pg-name">${ico("pisos","pg-ico")}<span><strong>${safe(name)}</strong><small>${record?.barrio ? safe(record.barrio + " · " + record.distrito) : "Zona pendiente de Real Estate"}</small></span></span>
+            <span role="cell" class="pg-meta">${meta}</span>
+            <span role="cell" class="pg-link">${record?.slug ? `<a class="text-button inline" href="#pisos/${record.slug}">Ficha del piso →</a>` : ""}</span>
+          </div>` + list.map(room => {
           const cycle = state[room.id];
           const { record, whole, m2, zone } = info(room);
           const target = targetPrice(room);
@@ -185,15 +204,16 @@ function pricingView() {
           const market = !whole && zone?.comps.length ? zone.compMedianM2 : null;
           const gap = perM2Value && market ? perM2Value / market - 1 : null;
           const canEdit = cycle.opened && !cycle.next;
-          return `<div class="price-row" role="row">
-            <span role="cell" data-label="Unidad"><strong>${whole ? safe(room.floor) : unitLabel(room.number)}</strong><small>${whole ? "Piso completo" : safe(room.floor)}${typeof unitFeatures === "function" ? " · " + unitFeatures(room,false).split(" · ").slice(0,2).join(" · ") : ""}</small></span>
+          return `<div class="price-row in-group" role="row">
+            <span role="cell" data-label="Unidad"><strong>${whole ? "Piso completo" : unitLabel(room.number)}</strong><small>${typeof unitFeatures === "function" ? unitFeatures(room,false).split(" · ").slice(0,2).join(" · ") : ""}</small></span>
             <span role="cell" data-label="Renta anterior">${money.format(rent)}</span>
             <span role="cell" data-label="Precio objetivo">${target ? `<strong>${money.format(target)}</strong><small class="${target >= rent ? "up" : "down"}">${pct.format((target - rent) / rent)} vs. anterior</small>` : '<span class="pending-re">Por definir</span>'}</span>
             <span role="cell" data-label="Publicado">${prices.length ? publishedPriceLabel(room).replace(" / mes","") : '<span class="muted">Sin anuncio</span>'}${differs ? '<small class="warn-text">Distinto del objetivo</small>' : ""}</span>
             <span role="cell" data-label="€/m² · mercado">${perM2Value ? `${eurM2(perM2Value)}${market ? `<small>Zona ${eurM2(market)} · <b class="${Math.abs(gap) > 0.15 ? "warn-text" : ""}">${pct.format(gap)}</b></small>` : `<small class="muted">${whole ? "€/m² del piso" : record?.barrio ? "Sin comparables" : "Zona pendiente"}</small>`}` : '<span class="muted">m² pendientes</span>'}</span>
             <span role="cell" data-label="Etapa"><span class="stage-pill">${cycleStage(room)}</span></span>
-            <span role="cell" class="price-actions">${canEdit ? action(room,"pricing",target ? "Editar precio" : "Fijar precio",target ? "secondary" : "primary") : ""}<a class="text-button inline" href="#ciclo/${room.id}" data-origin="pipeline">Ficha →</a></span>
+            <span role="cell" class="price-actions">${canEdit ? action(room,"pricing",target ? "Editar precio" : "Fijar precio",target ? "secondary" : "primary") : ""}<a class="text-button inline" href="#ciclo/${room.id}" data-origin="pipeline">Ciclo →</a></span>
           </div>`;
+          }).join("");
         }).join("")}
       </div>
       <p class="price-note muted">€/m² de habitación = precio objetivo (o renta anterior si no hay) ÷ m² de la habitación, frente a la mediana de comparables externos de su barrio. Los anuncios se gestionan desde la ficha del ciclo.</p>
